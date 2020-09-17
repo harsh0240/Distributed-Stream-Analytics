@@ -3,10 +3,11 @@ import time
 import cv2
 from kafka import KafkaProducer
 
-topic = "distributed-video1"
+topic1 = "distributed-video1"
+topic2 = "distributed-video2"
 fourcc = cv2.VideoWriter_fourcc(*'DIVX')
 
-
+'''
 def publish_video(video_file):
     """
     Publish given video file to a specified Kafka topic. 
@@ -36,9 +37,9 @@ def publish_video(video_file):
         # Convert to bytes and send to kafka
         producer.send(topic, buffer.tobytes())
 
-        time.sleep(0.2)
     video.release()
     print('publish complete')
+ '''
 
 def publish_camera():
     """
@@ -50,22 +51,26 @@ def publish_camera():
     producer = KafkaProducer(bootstrap_servers='localhost:9092')
 
     
-    camera = cv2.VideoCapture(0)
-    out = cv2.VideoWriter('detection.avi', fourcc, 6.0, (int(camera.get(3)), int(camera.get(4))))
+    camera1 = cv2.VideoCapture(0)
+    camera2 = cv2.VideoCapture('http://192.168.43.250:8080/video')
+    out = cv2.VideoWriter('detection.avi', fourcc, 6.0, (int(camera1.get(3)), int(camera1.get(4))))
 	
 
     try:
         while(True):
-            success, frame = camera.read()
+            success, frame = camera1.read()
             #grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             out.write(frame)
 
             ret, buffer = cv2.imencode('.jpg', frame)
-            producer.send(topic, buffer.tobytes())
-            
-            
-            # Choppier stream, reduced load on processor
-            time.sleep(0.2)
+            producer.send(topic1, buffer.tobytes())
+       
+            success, frame = camera2.read()
+            #grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            #out.write(frame)
+
+            ret, buffer = cv2.imencode('.jpg', frame)
+            producer.send(topic2, buffer.tobytes())            
 
     except:
         print("\nExiting.")
@@ -77,13 +82,17 @@ def publish_camera():
 
 
 if __name__ == '__main__':
-    """
+	
+	print("publishing feed!")
+	publish_camera()
+
+"""
     Producer will publish to Kafka Server a video file given as a system arg. 
     Otherwise it will default by streaming webcam feed.
-    """
+ 
     if(len(sys.argv) > 1):
         video_path = sys.argv[1]
         publish_video(video_path)
     else:
-        print("publishing feed!")
-        publish_camera()
+"""
+    

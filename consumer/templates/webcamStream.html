@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <title>Video Streaming Demonstration for Webcam</title>
+  </head>
+  <body>
+    <h1>Webcam Stream</h1>
+    <form method="post">
+        <p><input type="submit" name="submit" value="Stop"></p>
+        <p><input type="submit" name="submit" value="Start"></p>
+    </form>
+    <img src="{{ url_for('video_feed_web') }}">
+  </body>
+</html>
