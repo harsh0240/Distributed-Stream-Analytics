@@ -51,19 +51,20 @@ def publish_camera():
 
     
     camera1 = cv2.VideoCapture(0)
-    #camera2 = cv2.VideoCapture('http://192.168.43.238:8080/video')
+    #camera2 = cv2.VideoCapture('http://192.168.43.235:8080/video')
 	
 
     try:
         while(True):
             success, frame = camera1.read()
+            frame=cv2.flip(frame,1)
             #grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             ret, buffer = cv2.imencode('.jpg', frame)
             producer.send(topic1, buffer.tobytes())
             '''
             success, frame = camera2.read()
             #grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
+			frame=cv2.flip(frame,1)
             ret, buffer = cv2.imencode('.jpg', frame)
             producer.send(topic2, buffer.tobytes())            
             '''
