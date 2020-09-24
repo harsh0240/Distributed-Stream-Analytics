@@ -5,7 +5,6 @@ from kafka import KafkaProducer
 
 topic1 = "distributed-video1"
 topic2 = "distributed-video2"
-fourcc = cv2.VideoWriter_fourcc(*'DIVX')
 
 '''
 def publish_video(video_file):
@@ -52,34 +51,29 @@ def publish_camera():
 
     
     camera1 = cv2.VideoCapture(0)
-    camera2 = cv2.VideoCapture('http://192.168.43.250:8080/video')
-    out = cv2.VideoWriter('detection.avi', fourcc, 6.0, (int(camera1.get(3)), int(camera1.get(4))))
+    #camera2 = cv2.VideoCapture('http://192.168.43.238:8080/video')
 	
 
     try:
         while(True):
             success, frame = camera1.read()
             #grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            out.write(frame)
-
             ret, buffer = cv2.imencode('.jpg', frame)
             producer.send(topic1, buffer.tobytes())
-       
+            '''
             success, frame = camera2.read()
             #grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            #out.write(frame)
 
             ret, buffer = cv2.imencode('.jpg', frame)
             producer.send(topic2, buffer.tobytes())            
-
+            '''
     except:
         print("\nExiting.")
         sys.exit(1)
 
     
-    camera.release()
-    out.release()
-
+    camera1.release()
+    camera2.release()
 
 if __name__ == '__main__':
 	
