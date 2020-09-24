@@ -18,14 +18,13 @@ consumer2 = KafkaConsumer(
     bootstrap_servers=['localhost:9092'])
 
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out1 = cv2.VideoWriter('output1.avi',fourcc, 20.0, (640,480),1)
-out2 = cv2.VideoWriter('output2.avi',fourcc, 20.0, (640,480),1)
-out2.release()
+webcamWriter=None
+mobileCamWriter=None
 
 webcamFlag=True
 mobileCamFlag=True
-recordFlag=False
-
+recordWebFlag=False
+recordMobFlag=False
 # Set the consumer in a Flask App
 app = Flask(__name__)
 
@@ -35,18 +34,20 @@ def index():
 
 @app.route('/webcam', methods=['GET','POST'])
 def webcamStream():
-    global webcamFlag,recordFlag
-    global out1
+    global webcamFlag,recordWebFlag,webcamWriter
     if request.method == 'POST':
         if request.form['submit']=='Stop' and webcamFlag==True:
             webcamFlag=False
         elif request.form['submit']=='Start' and webcamFlag==False:
             webcamFlag=True
         if request.form['submit']=='Start Recording':
-            recordFlag=True
-        elif request.form['submit']=='Stop Recording' and recordFlag==True:
-            recordFlag=False
-            out1.release()
+            recordWebFlag=True
+            time=str(datetime.now().time())
+            filename='./recording-'+time+'.avi'
+            webcamWriter = cv2.VideoWriter(filename,fourcc, 20.0, (640,480),1)
+        elif request.form['submit']=='Stop Recording' and recordWebFlag==True:
+            recordWebFlag=False
+            webcamWriter.release()
 
     return render_template('webcamStream.html')
 
@@ -77,7 +78,7 @@ def video_feed_web():
     #cv2.waitKey()
     if webcamFlag:
         return Response(
-            get_video_stream(consumer1,out1), 
+            get_video_stream(consumer1,webcamWriter,recordWebFlag), 
             mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
@@ -92,19 +93,18 @@ def video_feed_mobile():
     print(mobileCamFlag)
     if mobileCamFlag:
         return Response(
-            get_video_stream(consumer2,out2), 
+            get_video_stream(consumer2,mobileCamWriter,recordMobFlag), 
             mimetype='multipart/x-mixed-replace; boundary=frame')
 
-def get_video_stream(consumer,outFile):
+def get_video_stream(consumer,outFile,flag):
     """
     Here is where we recieve streamed images from the Kafka Server and convert 
     them to a Flask-readable format.
     """
-    global recordFlag
     for msg in consumer:
         yield (b'--frame\r\n'
                b'Content-Type: image/jpg\r\n\r\n' + msg.value + b'\r\n\r\n')
-        if recordFlag==True:
+        if flag==True:
             image = np.fromstring(msg.value, dtype=np.uint8)
             image = cv2.imdecode(image, cv2.IMREAD_COLOR)
             outFile.write(image)
