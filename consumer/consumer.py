@@ -40,7 +40,7 @@ def webcamStream():
             webcamFlag=False
         elif request.form['submit']=='Start' and webcamFlag==False:
             webcamFlag=True
-        if request.form['submit']=='Start Recording':
+        if request.form['submit']=='Start Recording' and recordWebFlag==False:
             recordWebFlag=True
             time=str(datetime.now().time())
             filename='./recording-'+time+'.avi'
