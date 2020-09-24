@@ -63,7 +63,6 @@ def publish_camera():
             producer.send(topic1, buffer.tobytes())
             
             success, frame = camera2.read()
-            frame=cv2.flip(frame,1)
             resizedFrame=cv2.resize(frame,(640,480))
             ret, buffer = cv2.imencode('.jpg', resizedFrame)
             producer.send(topic2, buffer.tobytes())            

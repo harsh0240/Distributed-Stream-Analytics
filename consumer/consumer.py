@@ -43,7 +43,7 @@ def webcamStream():
         if request.form['submit']=='Start Recording' and recordWebFlag==False:
             recordWebFlag=True
             time=str(datetime.now().time())
-            filename='./recording-'+time+'.avi'
+            filename='./recording-WEBCAM--'+time+'.avi'
             webcamWriter = cv2.VideoWriter(filename,fourcc, 20.0, (640,480),1)
         elif request.form['submit']=='Stop Recording' and recordWebFlag==True:
             recordWebFlag=False
@@ -53,13 +53,21 @@ def webcamStream():
 
 @app.route('/mobile', methods=['GET','POST'])
 def mobileCamStream():
-    global mobileCamFlag
+    global mobileCamFlag,recordMobFlag,mobileCamWriter
     if request.method == 'POST':
         print(request.form['submit']=='Start')
         if request.form['submit']=='Stop' and mobileCamFlag==True:
             mobileCamFlag=False
         elif request.form['submit']=='Start' and mobileCamFlag==False:
             mobileCamFlag=True
+        if request.form['submit']=='Start Recording' and recordMobFlag==False:
+            recordMobFlag=True
+            time=str(datetime.now().time())
+            filename='./recording-MOBILE--'+time+'.avi'
+            mobileCamWriter = cv2.VideoWriter(filename,fourcc, 20.0, (640,480),1)
+        elif request.form['submit']=='Stop Recording' and recordMobFlag==True:
+            recordMobFlag=False
+            mobileCamWriter.release()
             
     return render_template('mobileStream.html')
 
@@ -72,10 +80,6 @@ def video_feed_web():
     """
     global webcamFlag
     print(webcamFlag)
-    #image = np.asarray(bytearray(frame), dtype="uint8")
-    #image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-    #cv2.imshow('URL2Image',frame)
-    #cv2.waitKey()
     if webcamFlag:
         return Response(
             get_video_stream(consumer1,webcamWriter,recordWebFlag), 
