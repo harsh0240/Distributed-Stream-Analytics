@@ -1,6 +1,9 @@
 import datetime
 from flask import Flask, Response, render_template, request
 from kafka import KafkaConsumer
+import cv2
+import numpy as np
+from datetime import datetime
 
 # Fire up the Kafka Consumer
 topic1 = "distributed-video1"
@@ -14,10 +17,14 @@ consumer2 = KafkaConsumer(
     topic2, 
     bootstrap_servers=['localhost:9092'])
 
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+webcamWriter=None
+mobileCamWriter=None
 
 webcamFlag=True
 mobileCamFlag=True
-
+recordWebFlag=False
+recordMobFlag=False
 # Set the consumer in a Flask App
 app = Flask(__name__)
 
@@ -25,28 +32,42 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
-frame=0
 @app.route('/webcam', methods=['GET','POST'])
 def webcamStream():
-    global webcamFlag
+    global webcamFlag,recordWebFlag,webcamWriter
     if request.method == 'POST':
-        print(request.form['submit']=='Start')
         if request.form['submit']=='Stop' and webcamFlag==True:
             webcamFlag=False
         elif request.form['submit']=='Start' and webcamFlag==False:
             webcamFlag=True
+        if request.form['submit']=='Start Recording' and recordWebFlag==False:
+            recordWebFlag=True
+            time=str(datetime.now().time())
+            filename='./recording-WEBCAM--'+time+'.avi'
+            webcamWriter = cv2.VideoWriter(filename,fourcc, 20.0, (640,480),1)
+        elif request.form['submit']=='Stop Recording' and recordWebFlag==True:
+            recordWebFlag=False
+            webcamWriter.release()
 
     return render_template('webcamStream.html')
 
 @app.route('/mobile', methods=['GET','POST'])
 def mobileCamStream():
-    global mobileCamFlag
+    global mobileCamFlag,recordMobFlag,mobileCamWriter
     if request.method == 'POST':
         print(request.form['submit']=='Start')
         if request.form['submit']=='Stop' and mobileCamFlag==True:
             mobileCamFlag=False
         elif request.form['submit']=='Start' and mobileCamFlag==False:
             mobileCamFlag=True
+        if request.form['submit']=='Start Recording' and recordMobFlag==False:
+            recordMobFlag=True
+            time=str(datetime.now().time())
+            filename='./recording-MOBILE--'+time+'.avi'
+            mobileCamWriter = cv2.VideoWriter(filename,fourcc, 20.0, (640,480),1)
+        elif request.form['submit']=='Stop Recording' and recordMobFlag==True:
+            recordMobFlag=False
+            mobileCamWriter.release()
             
     return render_template('mobileStream.html')
 
@@ -61,7 +82,7 @@ def video_feed_web():
     print(webcamFlag)
     if webcamFlag:
         return Response(
-            get_video_stream(consumer1), 
+            get_video_stream(consumer1,webcamWriter,recordWebFlag), 
             mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
@@ -76,10 +97,10 @@ def video_feed_mobile():
     print(mobileCamFlag)
     if mobileCamFlag:
         return Response(
-            get_video_stream(consumer2), 
+            get_video_stream(consumer2,mobileCamWriter,recordMobFlag), 
             mimetype='multipart/x-mixed-replace; boundary=frame')
 
-def get_video_stream(consumer):
+def get_video_stream(consumer,outFile,flag):
     """
     Here is where we recieve streamed images from the Kafka Server and convert 
     them to a Flask-readable format.
@@ -87,6 +108,12 @@ def get_video_stream(consumer):
     for msg in consumer:
         yield (b'--frame\r\n'
                b'Content-Type: image/jpg\r\n\r\n' + msg.value + b'\r\n\r\n')
+        if flag==True:
+            image = np.fromstring(msg.value, dtype=np.uint8)
+            image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+            outFile.write(image)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
+
+
