@@ -70,7 +70,7 @@ def webcamStream():
 
 @app.route('/mobile', methods=['GET','POST'])
 def mobileCamStream():
-    global mobileCamFlag,recordMobFlag,mobileCamWriter
+    global mobileCamFlag,recordMobFlag,mobileCamWriter,mobileresolution
     if request.method == 'POST':
         print(request.form['submit']=='Start')
         if request.form['submit']=='Stop' and mobileCamFlag==True:
@@ -85,6 +85,15 @@ def mobileCamStream():
         elif request.form['submit']=='Stop Recording' and recordMobFlag==True:
             recordMobFlag=False
             mobileCamWriter.release()
+        elif request.form['submit'] in ['720p','480p','360p','240p']:
+            if mobileresolution!=request.form['submit']:
+                if recordMobFlag==True:
+                    mobileCamWriter.release()
+                    time=str(datetime.now().time())
+                    filename='./recording-MOBILE--'+time+'@'+request.form['submit']+'.avi'
+                    mobileCamWriter=cv2.VideoWriter(filename,fourcc,20.0,(640,480),1)
+                mobileresolution=request.form['submit']
+                producer.send(topic4,mobileresolution)
             
     return render_template('mobileStream.html')
 

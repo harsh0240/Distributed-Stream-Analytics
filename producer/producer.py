@@ -102,7 +102,7 @@ def publish_camera():
 
 	
 	camera1 = cv2.VideoCapture(0)
-	#camera2 = cv2.VideoCapture('http://192.168.43.85:8080/video')
+	camera2 = cv2.VideoCapture('http://192.168.43.102:8080/video')
 	
 	try:
 		while(True):
@@ -110,21 +110,26 @@ def publish_camera():
 			
 			success, frame = camera1.read()
 			frame=cv2.flip(frame,1)
+			modifiedFrame=frame
 			if webresolution!='auto':
-				frame=set_resolution(frame,webresolution)
+				modifiedFrame=set_resolution(frame,webresolution)
 			#grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-			ret, buffer = cv2.imencode('.jpg', frame)
+			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
 			producer.send(topic1, buffer.tobytes())
 
+			force_async(get_stream_resolution)(topic4)
 
-			'''
 			success, frame = camera2.read()
 			resizedFrame=cv2.resize(frame,(640,480))
-			ret, buffer = cv2.imencode('.jpg', resizedFrame)
+			modifiedFrame=resizedFrame
+			if mobileresolution!='auto':
+				modifiedFrame=set_resolution(resizedFrame,mobileresolution)
+			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
 			producer.send(topic2, buffer.tobytes())  
-			'''        
+			        
 			
-	except:
+	except Exception as e:
+		print('EXCEPTION OCCURED: ',e)
 		print("\nExiting.")
 		sys.exit(1)
 
