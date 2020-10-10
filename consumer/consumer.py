@@ -30,6 +30,8 @@ webcamFlag=True
 mobileCamFlag=True
 recordWebFlag=False
 recordMobFlag=False
+webresolution='auto'
+mobileresolution='auto'
 # Set the consumer in a Flask App
 app = Flask(__name__)
 
@@ -39,7 +41,7 @@ def index():
 
 @app.route('/webcam', methods=['GET','POST'])
 def webcamStream():
-    global webcamFlag,recordWebFlag,webcamWriter
+    global webcamFlag,recordWebFlag,webcamWriter,webresolution
     if request.method == 'POST':
         if request.form['submit']=='Stop' and webcamFlag==True:
             webcamFlag=False
@@ -54,7 +56,14 @@ def webcamStream():
             recordWebFlag=False
             webcamWriter.release()
         elif request.form['submit'] in ['720p','480p','360p','240p']:
-            producer.send(topic3,request.form['submit'])
+            if webresolution!=request.form['submit']:
+                if recordWebFlag==True:
+                    webcamWriter.release()
+                    time=str(datetime.now().time())
+                    filename='./recording-WEBCAM--'+time+'@'+request.form['submit']+'.avi'
+                    webcamWriter=cv2.VideoWriter(filename,fourcc,20.0,(640,480),1)
+                webresolution=request.form['submit']
+                producer.send(topic3,webresolution)
 
 
     return render_template('webcamStream.html')
