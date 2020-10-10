@@ -11,8 +11,8 @@ topic2 = "distributed-video2"
 topic3 = "webresolution"
 topic4 = "mobileresolution"
 
-webresolution='360p'
-mobileresolution='360p'
+webresolution='auto'
+mobileresolution='auto'
 
 def force_async(fn):
     '''
@@ -78,6 +78,19 @@ def get_stream_resolution(topic):
 		else:
 			mobileresolution=message.value
 
+def set_resolution(image,resolution):
+	blurImage=None
+	if resolution=='240p':
+		blurImage=cv2.blur(image,(7,7),0)
+	elif resolution=='360p':
+		blurImage=cv2.blur(image,(5,5),0)
+	elif resolution=='480p':
+		blurImage=cv2.blur(image,(3,3),0)
+	else:
+		blurImage=image
+	return blurImage
+
+
 def publish_camera():
 	"""
 	Publish camera video stream to specified Kafka topic.
@@ -93,10 +106,12 @@ def publish_camera():
 	
 	try:
 		while(True):
+			force_async(get_stream_resolution)(topic3)
+			
 			success, frame = camera1.read()
 			frame=cv2.flip(frame,1)
-			force_async(get_stream_resolution)(topic3)
-			print(webresolution)
+			if webresolution!='auto':
+				frame=set_resolution(frame,webresolution)
 			#grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 			ret, buffer = cv2.imencode('.jpg', frame)
 			producer.send(topic1, buffer.tobytes())
