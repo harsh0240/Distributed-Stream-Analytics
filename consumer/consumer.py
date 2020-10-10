@@ -30,8 +30,8 @@ webcamFlag=True
 mobileCamFlag=True
 recordWebFlag=False
 recordMobFlag=False
-webresolution='auto'
-mobileresolution='auto'
+webresolution='Auto'
+mobileresolution='Auto'
 # Set the consumer in a Flask App
 app = Flask(__name__)
 
@@ -55,7 +55,7 @@ def webcamStream():
         elif request.form['submit']=='Stop Recording' and recordWebFlag==True:
             recordWebFlag=False
             webcamWriter.release()
-        elif request.form['submit'] in ['720p','480p','360p','240p']:
+        elif request.form['submit'] in ['720p','480p','360p','240p','Auto']:
             if webresolution!=request.form['submit']:
                 if recordWebFlag==True:
                     webcamWriter.release()
@@ -85,7 +85,7 @@ def mobileCamStream():
         elif request.form['submit']=='Stop Recording' and recordMobFlag==True:
             recordMobFlag=False
             mobileCamWriter.release()
-        elif request.form['submit'] in ['720p','480p','360p','240p']:
+        elif request.form['submit'] in ['720p','480p','360p','240p','Auto']:
             if mobileresolution!=request.form['submit']:
                 if recordMobFlag==True:
                     mobileCamWriter.release()
@@ -94,6 +94,7 @@ def mobileCamStream():
                     mobileCamWriter=cv2.VideoWriter(filename,fourcc,20.0,(640,480),1)
                 mobileresolution=request.form['submit']
                 producer.send(topic4,mobileresolution)
+
             
     return render_template('mobileStream.html')
 

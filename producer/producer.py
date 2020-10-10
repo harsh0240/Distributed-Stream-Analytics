@@ -11,8 +11,8 @@ topic2 = "distributed-video2"
 topic3 = "webresolution"
 topic4 = "mobileresolution"
 
-webresolution='auto'
-mobileresolution='auto'
+webresolution='Auto'
+mobileresolution='Auto'
 
 def force_async(fn):
     '''
@@ -111,7 +111,7 @@ def publish_camera():
 			success, frame = camera1.read()
 			frame=cv2.flip(frame,1)
 			modifiedFrame=frame
-			if webresolution!='auto':
+			if webresolution!='Auto':
 				modifiedFrame=set_resolution(frame,webresolution)
 			#grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
@@ -122,7 +122,7 @@ def publish_camera():
 			success, frame = camera2.read()
 			resizedFrame=cv2.resize(frame,(640,480))
 			modifiedFrame=resizedFrame
-			if mobileresolution!='auto':
+			if mobileresolution!='Auto':
 				modifiedFrame=set_resolution(resizedFrame,mobileresolution)
 			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
 			producer.send(topic2, buffer.tobytes())  
