@@ -1,13 +1,18 @@
-import datetime
 from flask import Flask, Response, render_template, request
-from kafka import KafkaConsumer
+from kafka import KafkaConsumer,KafkaProducer
 import cv2
 import numpy as np
 from datetime import datetime
+from json import dumps
+from time import sleep
 
 # Fire up the Kafka Consumer
 topic1 = "distributed-video1"
 topic2 = "distributed-video2"
+topic3 = "webresolution"
+topic4 = "mobileresolution"
+
+producer = KafkaProducer(bootstrap_servers='localhost:9092',value_serializer=lambda x: dumps(x).encode('utf-8'))
 
 consumer1 = KafkaConsumer(
     topic1, 
@@ -40,7 +45,7 @@ def webcamStream():
             webcamFlag=False
         elif request.form['submit']=='Start' and webcamFlag==False:
             webcamFlag=True
-        if request.form['submit']=='Start Recording' and recordWebFlag==False:
+        elif request.form['submit']=='Start Recording' and recordWebFlag==False:
             recordWebFlag=True
             time=str(datetime.now().time())
             filename='./recording-WEBCAM--'+time+'.avi'
@@ -48,6 +53,9 @@ def webcamStream():
         elif request.form['submit']=='Stop Recording' and recordWebFlag==True:
             recordWebFlag=False
             webcamWriter.release()
+        elif request.form['submit'] in ['720p','480p','360p','240p']:
+            producer.send(topic3,request.form['submit'])
+
 
     return render_template('webcamStream.html')
 
