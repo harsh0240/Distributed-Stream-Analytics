@@ -102,11 +102,13 @@ def publish_camera():
 
 	
 	camera1 = cv2.VideoCapture(0)
-	camera2 = cv2.VideoCapture('http://192.168.43.102:8080/video')
+	camera2 = cv2.VideoCapture('http://192.168.43.165:8080/video')
 	
+	force_async(get_stream_resolution)(topic3)
+	force_async(get_stream_resolution)(topic4)
+
 	try:
 		while(True):
-			force_async(get_stream_resolution)(topic3)
 			
 			success, frame = camera1.read()
 			frame=cv2.flip(frame,1)
@@ -117,7 +119,6 @@ def publish_camera():
 			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
 			producer.send(topic1, buffer.tobytes())
 
-			force_async(get_stream_resolution)(topic4)
 
 			success, frame = camera2.read()
 			resizedFrame=cv2.resize(frame,(640,480))
