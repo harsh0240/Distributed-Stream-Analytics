@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template, request
+from flask import Flask, Response, render_template, request,stream_with_context
 from kafka import KafkaConsumer,KafkaProducer
 import cv2
 import numpy as np
@@ -64,9 +64,9 @@ def webcamStream():
                     webcamWriter=cv2.VideoWriter(filename,fourcc,20.0,(640,480),1)
                 webresolution=request.form['submit']
                 producer.send(topic3,webresolution)
-
-
+    
     return render_template('webcamStream.html')
+
 
 @app.route('/mobile', methods=['GET','POST'])
 def mobileCamStream():
@@ -109,8 +109,10 @@ def video_feed_web():
     print(webcamFlag)
     if webcamFlag:
         return Response(
-            get_video_stream(consumer1,webcamWriter,recordWebFlag), 
+            stream_with_context(get_video_stream(consumer1,webcamWriter,recordWebFlag)), 
             mimetype='multipart/x-mixed-replace; boundary=frame')
+
+    return Response()
 
 
 @app.route('/mobile_feed', methods=['GET'])
@@ -124,8 +126,10 @@ def video_feed_mobile():
     print(mobileCamFlag)
     if mobileCamFlag:
         return Response(
-            get_video_stream(consumer2,mobileCamWriter,recordMobFlag), 
+            stream_with_context(get_video_stream(consumer2,mobileCamWriter,recordMobFlag)), 
             mimetype='multipart/x-mixed-replace; boundary=frame')
+
+    return Response()
 
 def get_video_stream(consumer,outFile,flag):
     """
@@ -139,6 +143,7 @@ def get_video_stream(consumer,outFile,flag):
             image = np.fromstring(msg.value, dtype=np.uint8)
             image = cv2.imdecode(image, cv2.IMREAD_COLOR)
             outFile.write(image)
+        sleep(0.07)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)

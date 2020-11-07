@@ -102,10 +102,10 @@ def publish_camera():
 
 	
 	camera1 = cv2.VideoCapture(0)
-	camera2 = cv2.VideoCapture('http://192.168.43.165:8080/video')
+	#camera2 = cv2.VideoCapture('http://192.168.43.220:8080/video')
 	
 	force_async(get_stream_resolution)(topic3)
-	force_async(get_stream_resolution)(topic4)
+	#force_async(get_stream_resolution)(topic4)
 
 	try:
 		while(True):
@@ -119,7 +119,7 @@ def publish_camera():
 			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
 			producer.send(topic1, buffer.tobytes())
 
-
+			'''
 			success, frame = camera2.read()
 			resizedFrame=cv2.resize(frame,(640,480))
 			modifiedFrame=resizedFrame
@@ -127,7 +127,7 @@ def publish_camera():
 				modifiedFrame=set_resolution(resizedFrame,mobileresolution)
 			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
 			producer.send(topic2, buffer.tobytes())  
-			        
+			'''        
 			
 	except Exception as e:
 		print('EXCEPTION OCCURED: ',e)
