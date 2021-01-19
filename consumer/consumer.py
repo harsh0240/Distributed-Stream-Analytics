@@ -3,8 +3,9 @@ from kafka import KafkaConsumer,KafkaProducer
 import cv2
 import numpy as np
 from datetime import datetime
-from json import dumps
+import json
 from time import sleep
+import base64
 
 # Fire up the Kafka Consumer
 topic1 = "distributed-video1"
@@ -12,15 +13,17 @@ topic2 = "distributed-video2"
 topic3 = "webresolution"
 topic4 = "mobileresolution"
 
-producer = KafkaProducer(bootstrap_servers='localhost:9092',value_serializer=lambda x: dumps(x).encode('utf-8'))
+producer = KafkaProducer(bootstrap_servers='localhost:9092',value_serializer=lambda x: json.dumps(x).encode('utf-8'))
 
 consumer1 = KafkaConsumer(
     topic1, 
-    bootstrap_servers=['localhost:9092'])
+    bootstrap_servers=['localhost:9092'],
+    value_deserializer=lambda m: json.loads(m.decode('utf-8')))
 
 consumer2 = KafkaConsumer(
     topic2, 
-    bootstrap_servers=['localhost:9092'])
+    bootstrap_servers=['localhost:9092'],
+    value_deserializer=lambda m: json.loads(m.decode('utf-8')))
 
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 webcamWriter=None
@@ -137,14 +140,15 @@ def get_video_stream(consumer,outFile,flag):
     them to a Flask-readable format.
     """
     for msg in consumer:
+        decodedFrame=base64.b64decode(msg.value['frame'])
         yield (b'--frame\r\n'
-               b'Content-Type: image/jpg\r\n\r\n' + msg.value + b'\r\n\r\n')
+               b'Content-Type: image/jpg\r\n\r\n' + decodedFrame + b'\r\n\r\n')
         if flag==True:
-            image = np.fromstring(msg.value, dtype=np.uint8)
+            image = np.fromstring(decodedFrame, dtype=np.uint8)
             image = cv2.imdecode(image, cv2.IMREAD_COLOR)
             outFile.write(image)
-        sleep(0.07)
-
+        #sleep(0.07)
+        
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
 
