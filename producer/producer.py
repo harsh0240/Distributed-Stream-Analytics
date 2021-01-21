@@ -2,9 +2,12 @@ import sys
 import time
 import cv2
 from kafka import KafkaProducer,KafkaConsumer
-from json import loads
+import json
 import asyncio
 import functools
+import datetime
+import base64
+import numpy as np
 
 topic1 = "distributed-video1"
 topic2 = "distributed-video2"
@@ -13,6 +16,11 @@ topic4 = "mobileresolution"
 
 webresolution='Auto'
 mobileresolution='Auto'
+frame_width=8.9 #640/72
+frame_height=6.7 #480/72
+
+cameras={1:0,2:'http://192.168.43.233:8080/video'} #dictionary of cameraId mapped to camera IPs
+
 
 def force_async(fn):
     '''
@@ -63,13 +71,23 @@ def publish_video(video_file):
 	print('publish complete')
  '''
 
+def convertToJSON(cameraId1,currTime,frame_width,frame_height,buffer):
+	obj={
+		"id": cameraId1,
+		"timestamp": str(currTime),
+		"width": str(frame_width),
+		"height": str(frame_height),
+		"frame": base64.b64encode(buffer.tobytes()).decode('utf-8')
+	}
+	return obj
+
 def get_stream_resolution(topic):
 	consumer = KafkaConsumer(
 	topic,
 	bootstrap_servers=['localhost:9092'],
 	auto_offset_reset='latest',
 	enable_auto_commit=False,
-	value_deserializer=lambda x: loads(x.decode('utf-8')))
+	value_deserializer=lambda x: json.loads(x.decode('utf-8')))
 	global webresolution,mobileresolution
 
 	for message in consumer:
@@ -98,14 +116,16 @@ def publish_camera():
 	"""
 
 	# Start up producer
-	producer = KafkaProducer(bootstrap_servers='localhost:9092')
+	producer = KafkaProducer(bootstrap_servers='localhost:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
 	
-	camera1 = cv2.VideoCapture(0)
-	#camera2 = cv2.VideoCapture('http://192.168.43.220:8080/video')
+	camera1 = cv2.VideoCapture(cameras[1])
+	cameraId1=1
+	camera2 = cv2.VideoCapture(cameras[2])
+	cameraId2=2
 	
 	force_async(get_stream_resolution)(topic3)
-	#force_async(get_stream_resolution)(topic4)
+	force_async(get_stream_resolution)(topic4)
 
 	try:
 		while(True):
@@ -117,17 +137,21 @@ def publish_camera():
 				modifiedFrame=set_resolution(frame,webresolution)
 			#grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
-			producer.send(topic1, buffer.tobytes())
+			currTime=datetime.datetime.now()
+			jsonObj=convertToJSON(cameraId1,currTime,frame_width,frame_height,buffer)
 
-			'''
+			producer.send(topic1,jsonObj)
+			
 			success, frame = camera2.read()
 			resizedFrame=cv2.resize(frame,(640,480))
 			modifiedFrame=resizedFrame
 			if mobileresolution!='Auto':
 				modifiedFrame=set_resolution(resizedFrame,mobileresolution)
 			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
-			producer.send(topic2, buffer.tobytes())  
-			'''        
+			currTime=datetime.datetime.now()
+			jsonObj=convertToJSON(cameraId2,currTime,frame_width,frame_height,buffer)
+			
+			producer.send(topic2,jsonObj)          
 			
 	except Exception as e:
 		print('EXCEPTION OCCURED: ',e)
