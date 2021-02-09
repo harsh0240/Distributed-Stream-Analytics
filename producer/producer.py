@@ -75,11 +75,12 @@ def publish_video(video_file):
 
 def convertToJSON(cameraId1,currTime,frame_width,frame_height,buffer):
 	obj={
-		"id": cameraId1,
+		"cameraId": 'cam-01',
 		"timestamp": str(currTime),
-		"width": str(frame_width),
-		"height": str(frame_height),
-		"frame": base64.b64encode(buffer.tobytes()).decode('utf-8')
+		"rows": 480,
+		"cols": 640,
+		"type": 16,
+		"data": base64.b64encode(buffer.tobytes()).decode('utf-8')
 	}
 	return obj
 
@@ -118,7 +119,7 @@ def publish_camera():
 	"""
 
 	# Start up producer
-	producer = KafkaProducer(bootstrap_servers='localhost:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+	producer = KafkaProducer(bootstrap_servers='localhost:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'), batch_size=20971520, max_request_size=2097152, compression_type="gzip")
 
 	
 	camera1 = cv2.VideoCapture(cameras[1])
@@ -138,17 +139,20 @@ def publish_camera():
 			if webresolution!='Auto':
 				modifiedFrame=set_resolution(frame,webresolution)
 			#grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+			
 			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
 			
 			currTime=str(round(time.time() * 1000))
 			path = dir_path + "/" + currTime + ".jpg"
 			# save image with lower quality—smaller file size
-			cv2.imwrite(path, frame, [cv2.IMWRITE_JPEG_QUALITY, 50])
+			#cv2.imwrite(path, frame, [cv2.IMWRITE_JPEG_QUALITY, 50])
 			#cv2.imwrite(path, frame)
+			print(currTime)
 			
-			jsonObj=convertToJSON(cameraId1,currTime,frame_width,frame_height,buffer)
-			
+			jsonObj=convertToJSON(cameraId1,currTime,frame_width,frame_height,modifiedFrame)
+			#print(jsonObj)
 			producer.send(topic1,jsonObj)
+			#producer.flush()
 			
 			'''success, frame = camera2.read()
 			resizedFrame=cv2.resize(frame,(640,480))
