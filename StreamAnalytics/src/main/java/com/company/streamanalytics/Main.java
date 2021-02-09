@@ -28,9 +28,8 @@ public class Main {
                     .readStream()
                     .format("kafka")
                     .option("kafka.bootstrap.servers", "localhost:9092")
-                    .option("auto.offset.reset", "latest")
                     .option("max.partition.fetch.bytes", 2097152)
-                    .option("subscribe", "distributed-video1")
+                    .option("subscribe", "distributed-video1, distributed-video2")
                     .load();
 
 
