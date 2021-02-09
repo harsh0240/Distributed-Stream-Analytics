@@ -3,12 +3,14 @@ from kafka import KafkaConsumer,KafkaProducer
 import cv2
 import numpy as np
 from datetime import datetime
+import time
 import json
 from time import sleep
 import base64
 from flask_bootstrap import Bootstrap
 from flask_wtf import Form
 from wtforms.fields import DateTimeField
+import imgToVideo
 
 # Fire up the Kafka Consumer
 topic1 = "distributed-video1"
@@ -74,8 +76,32 @@ def webcamAnalytics():
         endTime=request.form['end']
         if endTime<startTime: 
             flash('The End time should be greater than the Start time')
+        else:
+            startDateTimeSplit=startTime.split('T');
+            endDateTimeSplit=endTime.split('T');
+            startDate=startDateTimeSplit[0];
+            endDate=endDateTimeSplit[0];
+            startTime=startDateTimeSplit[1].split(':')
+            endTime=endDateTimeSplit[1].split(':')
+            startSeconds=(int(startTime[0])*60+int(startTime[1]))*60+int(startTime[2]);
+            endSeconds=(int(endTime[0])*60+int(endTime[1]))*60+int(endTime[2]);
+            startTimestamp=time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds
+            endTimestamp=time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds
+            imgToVideo.findMotion(startTimestamp,endTimestamp)
+            imgToVideo.convertToVideo()
         
     return render_template('webcamMotionAnalytics.html',form=form)
+
+@app.route('/streamingMotionDetection', methods=['GET'])
+def stream_analytics():
+    if not imgToVideo.img_array:
+        return Response(
+            stream_with_context(imgToVideo.stream_video()), 
+            mimetype='multipart/x-mixed-replace; boundary=frame')
+    else:
+        flash('No motion has been detected in the selected time range')
+    return Response()
+
 
 @app.route('/videostreaming/webcam', methods=['GET','POST'])
 def webcamStream():
@@ -104,6 +130,7 @@ def webcamStream():
                 producer.send(topic3,webresolution)
     
     return render_template('webcamStream.html')
+
 
 
 @app.route('/videostreaming/mobile', methods=['GET','POST'])
@@ -144,7 +171,7 @@ def video_feed_web():
     new values streaming through the pipeline.
     """
     global webcamFlag
-    print(webcamFlag)
+    #print(webcamFlag)
     if webcamFlag:
         return Response(
             stream_with_context(get_video_stream(consumer1,webcamWriter,recordWebFlag)), 
@@ -161,7 +188,7 @@ def video_feed_mobile():
     new values streaming through the pipeline.
     """
     global mobileCamFlag
-    print(mobileCamFlag)
+    #print(mobileCamFlag)
     if mobileCamFlag:
         return Response(
             stream_with_context(get_video_stream(consumer2,mobileCamWriter,recordMobFlag)), 

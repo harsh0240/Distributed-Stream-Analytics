@@ -152,14 +152,8 @@ def publish_camera():
 			jsonObj=convertToJSON(cameraId1,currTime,frame_width,frame_height,modifiedFrame)
 			#print(jsonObj)
 			producer.send(topic1,jsonObj)
-<<<<<<< HEAD
-			'''
-			success, frame = camera2.read()
-=======
-			#producer.flush()
 			
 			'''success, frame = camera2.read()
->>>>>>> 7a00a722e8db858905d62fe37020db55ca8e2ca0
 			resizedFrame=cv2.resize(frame,(640,480))
 			modifiedFrame=resizedFrame
 			if mobileresolution!='Auto':
@@ -168,13 +162,8 @@ def publish_camera():
 			currTime=datetime.datetime.now()
 			jsonObj=convertToJSON(cameraId2,currTime,frame_width,frame_height,buffer)
 			
-<<<<<<< HEAD
-			producer.send(topic2,jsonObj)          
-			'''
-=======
 			producer.send(topic2,jsonObj)'''          
 			
->>>>>>> 7a00a722e8db858905d62fe37020db55ca8e2ca0
 	except Exception as e:
 		print('EXCEPTION OCCURED: ',e)
 		print("\nExiting.")
