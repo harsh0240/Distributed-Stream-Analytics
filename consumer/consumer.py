@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template, request,stream_with_context
+from flask import Flask, Response, render_template, request,stream_with_context, flash
 from kafka import KafkaConsumer,KafkaProducer
 import cv2
 import numpy as np
@@ -6,6 +6,9 @@ from datetime import datetime
 import json
 from time import sleep
 import base64
+from flask_bootstrap import Bootstrap
+from flask_wtf import Form
+from wtforms.fields import DateTimeField
 
 # Fire up the Kafka Consumer
 topic1 = "distributed-video1"
@@ -37,12 +40,43 @@ webresolution='Auto'
 mobileresolution='Auto'
 # Set the consumer in a Flask App
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret'
+Bootstrap(app)
+
+class MyForm(Form):
+    start = DateTimeField(
+        "Start Time",
+        id='startdatepick'
+    )
+    end = DateTimeField(
+        "End Time",
+        id='enddatepick'
+    )
 
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
 
-@app.route('/webcam', methods=['GET','POST'])
+@app.route('/videostreaming', methods=['GET'])
+def videoStreaming():
+    return render_template('videostreaming.html')
+
+@app.route('/videomotionanalytics', methods=['GET'])
+def videoMotionAnalytics():
+    return render_template('motiondetection.html')
+
+@app.route('/videomotionanalytics/webcam', methods=['GET','POST'])
+def webcamAnalytics():
+    form = MyForm()
+    if request.method == 'POST':
+        startTime=request.form['start']
+        endTime=request.form['end']
+        if endTime<startTime: 
+            flash('The End time should be greater than the Start time')
+        
+    return render_template('webcamMotionAnalytics.html',form=form)
+
+@app.route('/videostreaming/webcam', methods=['GET','POST'])
 def webcamStream():
     global webcamFlag,recordWebFlag,webcamWriter,webresolution
     if request.method == 'POST':
@@ -71,7 +105,7 @@ def webcamStream():
     return render_template('webcamStream.html')
 
 
-@app.route('/mobile', methods=['GET','POST'])
+@app.route('/videostreaming/mobile', methods=['GET','POST'])
 def mobileCamStream():
     global mobileCamFlag,recordMobFlag,mobileCamWriter,mobileresolution
     if request.method == 'POST':
@@ -148,7 +182,7 @@ def get_video_stream(consumer,outFile,flag):
             image = cv2.imdecode(image, cv2.IMREAD_COLOR)
             outFile.write(image)
         #sleep(0.07)
-        
+       
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
 
