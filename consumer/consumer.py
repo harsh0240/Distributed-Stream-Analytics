@@ -26,7 +26,8 @@ consumer1 = KafkaConsumer(
 consumer2 = KafkaConsumer(
     topic2, 
     bootstrap_servers=['localhost:9092'],
-    value_deserializer=lambda m: json.loads(m.decode('utf-8')))
+    value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+    max_partition_fetch_bytes=2097152)
 
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 webcamWriter=None
@@ -174,12 +175,20 @@ def get_video_stream(consumer,outFile,flag):
     them to a Flask-readable format.
     """
     for msg in consumer:
-        decodedFrame=base64.b64decode(msg.value['frame'])
+        decodedFrame=base64.b64decode(msg.value['data'])
+        image = np.fromstring(decodedFrame, dtype=np.uint8)
+        #print(decodedFrame)
+        image = np.reshape(image, (480, 640, 3))
+        #print(image)
+        ret, frame = cv2.imencode('.jpg', image)
+        #print(frame.tobytes() == decodedFrame)
+        buf = frame.tobytes()
         yield (b'--frame\r\n'
-               b'Content-Type: image/jpg\r\n\r\n' + decodedFrame + b'\r\n\r\n')
+               b'Content-Type: image/jpg\r\n\r\n' + buf + b'\r\n\r\n')
         if flag==True:
-            image = np.fromstring(decodedFrame, dtype=np.uint8)
-            image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+            #image = np.fromstring(decodedFrame, dtype=np.uint8)
+            #image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+            #print(image)
             outFile.write(image)
         #sleep(0.07)
        
