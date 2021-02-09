@@ -8,6 +8,7 @@ import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.File;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -135,7 +136,11 @@ public class MotionDetector {
 
     //Save image file
     private static void saveImage(Mat mat,VideoEventData ed,String outputDir){
-        String imagePath = outputDir+ed.getCameraId()+"-T-"+ed.getTimestamp().getTime()+".png";
+        String imagePath = outputDir+"/"+ed.getCameraId()+"/"+ed.getTimestamp().getTime()+".png";
+        File directory = new File(outputDir+"/"+ed.getCameraId());
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
         logger.warn("Saving images to "+imagePath);
         boolean result = Imgcodecs.imwrite(imagePath, mat);
         if(!result){

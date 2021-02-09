@@ -19,9 +19,8 @@ mobileresolution='Auto'
 frame_width=8.9 #640/72
 frame_height=6.7 #480/72
 
-dir_path="/home/harsh/processed-data/"
 
-cameras={1:0} #dictionary of cameraId mapped to camera IPs
+cameras={1:0, 2:'http://192.168.43.169:8080/video'} #dictionary of cameraId mapped to camera IPs
 
 
 def force_async(fn):
@@ -73,9 +72,9 @@ def publish_video(video_file):
 	print('publish complete')
  '''
 
-def convertToJSON(cameraId1,currTime,frame_width,frame_height,buffer):
+def convertToJSON(cameraId,currTime,frame_width,frame_height,buffer):
 	obj={
-		"cameraId": 'cam-01',
+		"cameraId": cameraId,
 		"timestamp": str(currTime),
 		"rows": 480,
 		"cols": 640,
@@ -123,12 +122,12 @@ def publish_camera():
 
 	
 	camera1 = cv2.VideoCapture(cameras[1])
-	cameraId1=1
-	#camera2 = cv2.VideoCapture(cameras[2])
-	#cameraId2=2
+	cameraId1="cam-01"
+	camera2 = cv2.VideoCapture(cameras[2])
+	cameraId2="mob-01"
 	
 	force_async(get_stream_resolution)(topic3)
-	#force_async(get_stream_resolution)(topic4)
+	force_async(get_stream_resolution)(topic4)
 
 	try:
 		while(True):
@@ -143,27 +142,28 @@ def publish_camera():
 			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
 			
 			currTime=str(round(time.time() * 1000))
-			path = dir_path + "/" + currTime + ".jpg"
+			#path = dir_path + "/" + currTime + ".jpg"
 			# save image with lower quality—smaller file size
 			#cv2.imwrite(path, frame, [cv2.IMWRITE_JPEG_QUALITY, 50])
 			#cv2.imwrite(path, frame)
-			print(currTime)
+			print(cameraId1 + " -- " + currTime)
 			
 			jsonObj=convertToJSON(cameraId1,currTime,frame_width,frame_height,modifiedFrame)
 			#print(jsonObj)
 			producer.send(topic1,jsonObj)
 			#producer.flush()
 			
-			'''success, frame = camera2.read()
+			success, frame = camera2.read()
 			resizedFrame=cv2.resize(frame,(640,480))
 			modifiedFrame=resizedFrame
 			if mobileresolution!='Auto':
 				modifiedFrame=set_resolution(resizedFrame,mobileresolution)
 			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
-			currTime=datetime.datetime.now()
-			jsonObj=convertToJSON(cameraId2,currTime,frame_width,frame_height,buffer)
+			currTime=str(round(time.time() * 1000))
+			print(cameraId2 + " -- " + currTime)
+			jsonObj=convertToJSON(cameraId2,currTime,frame_width,frame_height,modifiedFrame)
 			
-			producer.send(topic2,jsonObj)'''          
+			producer.send(topic2,jsonObj)          
 			
 	except Exception as e:
 		print('EXCEPTION OCCURED: ',e)

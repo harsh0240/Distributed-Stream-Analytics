@@ -4,14 +4,15 @@ import glob
 import os
 
 img_array = []
+camID = input()
 start = int(input())
 end = int(input())
 
 def parse(filename):
-	x = filename.split('-')[4]
+	x = filename.split('/')[5]
 	return int(x.split('.')[0])
 
-for filename in sorted(glob.glob('/home/harsh/analysed-data/*.png')):
+for filename in sorted(glob.glob('/home/harsh/analysed-data/'+camID+'/*.png')):
 	time = parse(filename)
 	print(time)
 	if time > end:
@@ -22,10 +23,10 @@ for filename in sorted(glob.glob('/home/harsh/analysed-data/*.png')):
 		height, width, layers = img.shape
 		size = (width,height)
 		img_array.append(img)
-		os.remove(filename)
+		#os.remove(filename)
 
 
-out = cv2.VideoWriter('project.avi', cv2.VideoWriter_fourcc(*'DIVX'), 10, size)
+out = cv2.VideoWriter(camID+'--'+str(start)+'-'+str(end)+'.avi', cv2.VideoWriter_fourcc(*'DIVX'), 10, size)
 
 if not img_array:
 	print("No motion in the selected time range.")
