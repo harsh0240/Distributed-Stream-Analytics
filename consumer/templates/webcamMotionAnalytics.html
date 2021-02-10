@@ -44,10 +44,10 @@
 </div>
   <div class='col-sm-6'>
     <form method="post">
-      {{ wtf.quick_form(form) }}
+      <p>Start Time: <input type="text" id="startdatepick" name="start"></p>
+      <p>End Time: <input type="text" id="enddatepick" name="end"></p>
       <input type="submit" name="submit" value="Submit"> 
   </form>
-  <img src="{{ url_for('stream_analytics') }}">
   </div>
   </div>
 {% endblock %}

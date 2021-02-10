@@ -45,7 +45,7 @@ mobileresolution='Auto'
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
 Bootstrap(app)
-
+'''
 class MyForm(Form):
     start = DateTimeField(
         "Start Time",
@@ -55,7 +55,7 @@ class MyForm(Form):
         "End Time",
         id='enddatepick'
     )
-
+'''
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
@@ -70,7 +70,6 @@ def videoMotionAnalytics():
 
 @app.route('/videomotionanalytics/webcam', methods=['GET','POST'])
 def webcamAnalytics():
-    form = MyForm()
     if request.method == 'POST':
         startTime=request.form['start']
         endTime=request.form['end']
@@ -87,10 +86,10 @@ def webcamAnalytics():
             endSeconds=(int(endTime[0])*60+int(endTime[1]))*60+int(endTime[2]);
             startTimestamp=time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds
             endTimestamp=time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds
-            imgToVideo.findMotion(startTimestamp,endTimestamp)
-            imgToVideo.convertToVideo()
+            #imgToVideo.findMotion(startTimestamp,endTimestamp)
+            #imgToVideo.convertToVideo()
         
-    return render_template('webcamMotionAnalytics.html',form=form)
+    return render_template('webcamMotionAnalytics.html')
 
 @app.route('/streamingMotionDetection', methods=['GET'])
 def stream_analytics():
