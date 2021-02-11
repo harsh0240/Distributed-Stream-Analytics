@@ -11,47 +11,6 @@ from flask_bootstrap import Bootstrap
 from flask_wtf import Form
 from wtforms.fields import DateTimeField
 import imgToVideo
-import glob
-import os
-
-def parse(filename):
-    cameraFrame = filename.split('/')[5]
-    cameraTimestamp=int(cameraFrame.split('.')[0])
-    return cameraTimestamp
-
-def convertToVideo(camID,start,end,size,img_array):
-    out = cv2.VideoWriter(camID+'--'+str(start)+'-'+str(end)+'.avi', cv2.VideoWriter_fourcc(*'DIVX'), 10, size)
-
-    if len(img_array)==0:
-        print("No motion in the selected time range.")
-    else:
-        for i in range(len(img_array)):
-            out.write(img_array[i])
-
-    out.release()
-
-def findMotion(camID,startTime,endTime,img_array):
-    size=(0,0)
-    print(camID)
-    for filename in sorted(glob.glob('/home/saloni/analysed-data/'+camID+'/*.png')):
-        time = parse(filename)
-        #print(time)
-        if time > endTime:
-            break
-        elif time >= startTime and time <= endTime:
-            img = cv2.imread(filename)
-            height, width, layers = img.shape
-            size = (width,height)
-            img_array.append(img)
-            #os.remove(filename)
-    convertToVideo(camID,startTime,endTime,size,img_array)
-
-
-def stream_video(img_array):
-    for img in img_array:
-        (flag,encodedImg)=cv2.imencode(".jpg",img)
-        yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImg) + b'\r\n')
-
 
 # Fire up the Kafka Consumer
 topic1 = "distributed-video1"
@@ -135,7 +94,7 @@ def webcamAnalytics():
             endSeconds=(int(endTime[0])*60+int(endTime[1]))*60+int(endTime[2]);
             startTimestamp=(time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds)*1000
             endTimestamp=(time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds)*1000
-            findMotion('cam-01',startTimestamp,endTimestamp,webcamImgArray)
+            imgToVideo.findMotion('cam-01',startTimestamp,endTimestamp,webcamImgArray)
     else:
         showWebAnalyticsVideo=False
     
@@ -163,7 +122,7 @@ def mobileAnalytics():
             endSeconds=(int(endTime[0])*60+int(endTime[1]))*60+int(endTime[2]);
             startTimestamp=(time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds)*1000
             endTimestamp=(time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds)*1000
-            findMotion('mob-01',startTimestamp,endTimestamp,mobileImgArray)
+            imgToVideo.findMotion('mob-01',startTimestamp,endTimestamp,mobileImgArray)
     else:
         showMobileAnalyticsVideo=False
     
@@ -176,7 +135,7 @@ def mobile_stream_analytics():
         showMobileAnalyticsVideo=False
         if len(mobileImgArray)>0:
             return Response(
-                stream_with_context(stream_video(mobileImgArray)), 
+                stream_with_context(imgToVideo.stream_video(mobileImgArray)), 
                 mimetype='multipart/x-mixed-replace; boundary=frame')
         else:
             flash('No motion has been detected in the selected time range')
@@ -189,7 +148,7 @@ def web_stream_analytics():
         showWebAnalyticsVideo=False
         if len(webcamImgArray)>0:
             return Response(
-                stream_with_context(stream_video(webcamImgArray)), 
+                stream_with_context(imgToVideo.stream_video(webcamImgArray)), 
                 mimetype='multipart/x-mixed-replace; boundary=frame')
         else:
             flash('No motion has been detected in the selected time range')
