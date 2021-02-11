@@ -30,7 +30,7 @@
   <div class="container">
     <h1>Motion Detection in Mobile</h1>
     <ul>
-      <li>Click <a href="/videomotionanalytics/mobile">here</a> to switch to motion analytics in mobile streams</li> 
+      <li>Click <a href="/videomotionanalytics/webcam">here</a> to switch to motion analytics in webcam streams</li> 
     </ul>
 <div class="container">
     {% for message in get_flashed_messages() %}
@@ -59,8 +59,8 @@
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
   <script type="text/javascript">
     $(function () {
-      $('#startdatepick').datetimepicker({ format: 'DD-MM-YYYYTHH:mm:ss',maxDate: new Date() });
-      $('#enddatepick').datetimepicker({ format: 'DD-MM-YYYYTHH:mm:ss',maxDate: new Date() });
+      $('#startdatepick').datetimepicker({ format: 'DD-MM-YYYYTHH:mm:ss'});
+      $('#enddatepick').datetimepicker({ format: 'DD-MM-YYYYTHH:mm:ss'});
     });
   </script>
 {% endblock %}
