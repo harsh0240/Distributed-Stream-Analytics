@@ -1,0 +1,66 @@
+<!--
+<html>
+  <head>
+   <title>Webcam Motion Detection</title>
+  </head>
+  <body>
+    <h1>Motion Detection in Webcam</h1>
+    <ul>
+      <li>Click <a href="/videomotionanalytics/mobile">here</a> to switch to motion analytics in mobile streams</li> 
+    </ul>
+    <form method="post">
+        <p>Start Time: <input type="submit" name="submit" value="Start"></p>
+        <p>End Time: <input type="submit" name="submit" value="Stop"></p>   
+    </form>
+    <img src="{{ url_for('video_feed_web') }}">
+  </body>
+</html>
+-->
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Webcam Motion Detection{% endblock %}
+
+{% block head %}
+  {{ super() }}
+  <link type="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css">
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <h1>Motion Detection in Webcam</h1>
+    <ul>
+      <li>Click <a href="/videomotionanalytics/mobile">here</a> to switch to motion analytics in mobile streams</li> 
+    </ul>
+<div class="container">
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {{ message }}
+    </div>
+    {% endfor %}
+
+    {% block page_content %}{% endblock %}
+</div>
+  <div class='col-sm-6'>
+    <form method="post">
+      <p>Start Time: <input type="text" id="startdatepick" name="start"></p>
+      <p>End Time: <input type="text" id="enddatepick" name="end"></p>
+      <input type="submit" name="submit" value="Submit">
+  </form>
+  <img src="{{ url_for('web_stream_analytics') }}">
+  </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+  <script type="text/javascript">
+    $(function () {
+      $('#startdatepick').datetimepicker({ format: 'DD-MM-YYYYTHH:mm:ss'});
+      $('#enddatepick').datetimepicker({ format: 'DD-MM-YYYYTHH:mm:ss'});
+    });
+  </script>
+{% endblock %}

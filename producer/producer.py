@@ -151,7 +151,6 @@ def publish_camera():
 			jsonObj=convertToJSON(cameraId1,currTime,frame_width,frame_height,modifiedFrame)
 			#print(jsonObj)
 			producer.send(topic1,jsonObj)
-			#producer.flush()
 			
 			success, frame = camera2.read()
 			resizedFrame=cv2.resize(frame,(640,480))
