@@ -19,7 +19,7 @@
 {% extends "bootstrap/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
-{% block title %}Webcam Motion Detection{% endblock %}
+{% block title %}Mobile Motion Detection{% endblock %}
 
 {% block head %}
   {{ super() }}
@@ -28,7 +28,7 @@
 
 {% block content %}
   <div class="container">
-    <h1>Motion Detection in Webcam</h1>
+    <h1>Motion Detection in Mobile</h1>
     <ul>
       <li>Click <a href="/videomotionanalytics/mobile">here</a> to switch to motion analytics in mobile streams</li> 
     </ul>
@@ -48,7 +48,7 @@
       <p>End Time: <input type="text" id="enddatepick" name="end"></p>
       <input type="submit" name="submit" value="Submit">
   </form>
-  <img src="{{ url_for('web_stream_analytics') }}">
+  <img src="{{ url_for('mobile_stream_analytics') }}">
   </div>
   </div>
 {% endblock %}

@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template, request,stream_with_context, flash
+from flask import Flask, Response, render_template, request,stream_with_context, flash, redirect, url_for
 from kafka import KafkaConsumer,KafkaProducer
 import cv2
 import numpy as np
@@ -11,6 +11,47 @@ from flask_bootstrap import Bootstrap
 from flask_wtf import Form
 from wtforms.fields import DateTimeField
 import imgToVideo
+import glob
+import os
+
+def parse(filename):
+    cameraFrame = filename.split('/')[5]
+    cameraTimestamp=int(cameraFrame.split('.')[0])
+    return cameraTimestamp
+
+def convertToVideo(camID,start,end,size,img_array):
+    out = cv2.VideoWriter(camID+'--'+str(start)+'-'+str(end)+'.avi', cv2.VideoWriter_fourcc(*'DIVX'), 10, size)
+
+    if len(img_array)==0:
+        print("No motion in the selected time range.")
+    else:
+        for i in range(len(img_array)):
+            out.write(img_array[i])
+
+    out.release()
+
+def findMotion(camID,startTime,endTime,img_array):
+    size=(0,0)
+    print(camID)
+    for filename in sorted(glob.glob('/home/saloni/analysed-data/'+camID+'/*.png')):
+        time = parse(filename)
+        #print(time)
+        if time > endTime:
+            break
+        elif time >= startTime and time <= endTime:
+            img = cv2.imread(filename)
+            height, width, layers = img.shape
+            size = (width,height)
+            img_array.append(img)
+            #os.remove(filename)
+    convertToVideo(camID,startTime,endTime,size,img_array)
+
+
+def stream_video(img_array):
+    for img in img_array:
+        (flag,encodedImg)=cv2.imencode(".jpg",img)
+        yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImg) + b'\r\n')
+
 
 # Fire up the Kafka Consumer
 topic1 = "distributed-video1"
@@ -41,6 +82,10 @@ recordWebFlag=False
 recordMobFlag=False
 webresolution='Auto'
 mobileresolution='Auto'
+showWebAnalyticsVideo=False
+showMobileAnalyticsVideo=False
+webcamImgArray=[]
+mobileImgArray=[]
 # Set the consumer in a Flask App
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
@@ -70,12 +115,16 @@ def videoMotionAnalytics():
 
 @app.route('/videomotionanalytics/webcam', methods=['GET','POST'])
 def webcamAnalytics():
+    global showWebAnalyticsVideo,webcamImgArray
     if request.method == 'POST':
         startTime=request.form['start']
         endTime=request.form['end']
+        print(startTime,endTime)
         if endTime<startTime: 
             flash('The End time should be greater than the Start time')
         else:
+            webcamImgArray=[]
+            showWebAnalyticsVideo=True
             startDateTimeSplit=startTime.split('T');
             endDateTimeSplit=endTime.split('T');
             startDate=startDateTimeSplit[0];
@@ -84,21 +133,66 @@ def webcamAnalytics():
             endTime=endDateTimeSplit[1].split(':')
             startSeconds=(int(startTime[0])*60+int(startTime[1]))*60+int(startTime[2]);
             endSeconds=(int(endTime[0])*60+int(endTime[1]))*60+int(endTime[2]);
-            startTimestamp=time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds
-            endTimestamp=time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds
-            #imgToVideo.findMotion(startTimestamp,endTimestamp)
-            #imgToVideo.convertToVideo()
-        
+            startTimestamp=(time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds)*1000
+            endTimestamp=(time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds)*1000
+            findMotion('cam-01',startTimestamp,endTimestamp,webcamImgArray)
+    else:
+        showWebAnalyticsVideo=False
+    
     return render_template('webcamMotionAnalytics.html')
 
-@app.route('/streamingMotionDetection', methods=['GET'])
-def stream_analytics():
-    if not imgToVideo.img_array:
-        return Response(
-            stream_with_context(imgToVideo.stream_video()), 
-            mimetype='multipart/x-mixed-replace; boundary=frame')
+@app.route('/videomotionanalytics/mobile', methods=['GET','POST'])
+def mobileAnalytics():
+    global showMobileAnalyticsVideo,mobileImgArray
+    if request.method == 'POST':
+        startTime=request.form['start']
+        endTime=request.form['end']
+        print(startTime,endTime)
+        if endTime<startTime: 
+            flash('The End time should be greater than the Start time')
+        else:
+            mobileImgArray=[]
+            showMobileAnalyticsVideo=True
+            startDateTimeSplit=startTime.split('T');
+            endDateTimeSplit=endTime.split('T');
+            startDate=startDateTimeSplit[0];
+            endDate=endDateTimeSplit[0];
+            startTime=startDateTimeSplit[1].split(':')
+            endTime=endDateTimeSplit[1].split(':')
+            startSeconds=(int(startTime[0])*60+int(startTime[1]))*60+int(startTime[2]);
+            endSeconds=(int(endTime[0])*60+int(endTime[1]))*60+int(endTime[2]);
+            startTimestamp=(time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds)*1000
+            endTimestamp=(time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds)*1000
+            findMotion('mob-01',startTimestamp,endTimestamp,mobileImgArray)
     else:
-        flash('No motion has been detected in the selected time range')
+        showMobileAnalyticsVideo=False
+    
+    return render_template('mobileMotionAnalytics.html')
+
+@app.route('/streamingMotionDetection/mobile', methods=['GET'])
+def mobile_stream_analytics():
+    global showMobileAnalyticsVideo,mobileImgArray
+    if showMobileAnalyticsVideo==True:
+        showMobileAnalyticsVideo=False
+        if len(mobileImgArray)>0:
+            return Response(
+                stream_with_context(stream_video(mobileImgArray)), 
+                mimetype='multipart/x-mixed-replace; boundary=frame')
+        else:
+            flash('No motion has been detected in the selected time range')
+    return Response()
+
+@app.route('/streamingMotionDetection/web', methods=['GET'])
+def web_stream_analytics():
+    global showWebAnalyticsVideo,webcamImgArray
+    if showWebAnalyticsVideo==True:
+        showWebAnalyticsVideo=False
+        if len(webcamImgArray)>0:
+            return Response(
+                stream_with_context(stream_video(webcamImgArray)), 
+                mimetype='multipart/x-mixed-replace; boundary=frame')
+        else:
+            flash('No motion has been detected in the selected time range')
     return Response()
 
 
