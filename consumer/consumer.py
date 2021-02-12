@@ -177,7 +177,7 @@ def webcamStream():
                     webcamWriter.release()
                     time=str(datetime.now().time())
                     filename='./recording-WEBCAM--'+time+'@'+request.form['submit']+'.avi'
-                    webcamWriter=cv2.VideoWriter(filename,fourcc,20.0,(640,480),1)
+                    webcamWriter=cv2.VideoWriter(filename,fourcc,10.0,(640,480),1)
                 webresolution=request.form['submit']
                 producer.send(topic3,webresolution)
     

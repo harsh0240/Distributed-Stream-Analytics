@@ -20,7 +20,7 @@ frame_width=8.9 #640/72
 frame_height=6.7 #480/72
 
 
-cameras={1:0, 2:'http://192.168.43.169:8080/video'} #dictionary of cameraId mapped to camera IPs
+cameras={1:0, 2:'http://25.95.71.93:8080/video'} #dictionary of cameraId mapped to camera IPs
 
 
 def force_async(fn):
@@ -123,7 +123,7 @@ def publish_camera():
 	
 	camera1 = cv2.VideoCapture(cameras[1])
 	cameraId1="cam-01"
-	camera2 = cv2.VideoCapture(cameras[2])
+	#camera2 = cv2.VideoCapture(cameras[2])
 	cameraId2="mob-01"
 	
 	force_async(get_stream_resolution)(topic3)
@@ -146,12 +146,11 @@ def publish_camera():
 			# save image with lower quality—smaller file size
 			#cv2.imwrite(path, frame, [cv2.IMWRITE_JPEG_QUALITY, 50])
 			#cv2.imwrite(path, frame)
-			print(cameraId1 + " -- " + currTime)
+			#print(cameraId1 + " -- " + currTime)
 			
 			jsonObj=convertToJSON(cameraId1,currTime,frame_width,frame_height,modifiedFrame)
-			#print(jsonObj)
 			producer.send(topic1,jsonObj)
-			
+			'''
 			success, frame = camera2.read()
 			resizedFrame=cv2.resize(frame,(640,480))
 			modifiedFrame=resizedFrame
@@ -159,11 +158,10 @@ def publish_camera():
 				modifiedFrame=set_resolution(resizedFrame,mobileresolution)
 			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
 			currTime=str(round(time.time() * 1000))
-			print(cameraId2 + " -- " + currTime)
 			jsonObj=convertToJSON(cameraId2,currTime,frame_width,frame_height,modifiedFrame)
 			
 			producer.send(topic2,jsonObj)          
-			
+			'''
 	except Exception as e:
 		print('EXCEPTION OCCURED: ',e)
 		print("\nExiting.")
