@@ -110,7 +110,7 @@ def set_resolution(image,resolution):
 		blurImage=image
 	return blurImage
 
-
+count=0
 def publish_camera():
 	"""
 	Publish camera video stream to specified Kafka topic.
@@ -131,7 +131,7 @@ def publish_camera():
 
 	try:
 		while(True):
-			
+			global count
 			success, frame = camera1.read()
 			frame=cv2.flip(frame,1)
 			modifiedFrame=frame
@@ -150,6 +150,8 @@ def publish_camera():
 			
 			jsonObj=convertToJSON(cameraId1,currTime,frame_width,frame_height,modifiedFrame)
 			producer.send(topic1,jsonObj)
+			count+=1
+			print('Frames sent through producer: ',count)
 			'''
 			success, frame = camera2.read()
 			resizedFrame=cv2.resize(frame,(640,480))

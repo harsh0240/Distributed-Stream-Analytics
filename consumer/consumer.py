@@ -95,6 +95,7 @@ def webcamAnalytics():
             startTimestamp=(time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds)*1000
             endTimestamp=(time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds)*1000
             imgToVideo.findMotion('cam-01',startTimestamp,endTimestamp,webcamImgArray)
+            return redirect(url_for('web_stream_analytics'))
     else:
         showWebAnalyticsVideo=False
     
@@ -123,6 +124,7 @@ def mobileAnalytics():
             startTimestamp=(time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds)*1000
             endTimestamp=(time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds)*1000
             imgToVideo.findMotion('mob-01',startTimestamp,endTimestamp,mobileImgArray)
+            return redirect(url_for('mobile_stream_analytics'))
     else:
         showMobileAnalyticsVideo=False
     
@@ -139,7 +141,7 @@ def mobile_stream_analytics():
                 mimetype='multipart/x-mixed-replace; boundary=frame')
         else:
             flash('No motion has been detected in the selected time range')
-    return Response()
+    return render_template('mobileMotionAnalytics.html')
 
 @app.route('/streamingMotionDetection/web', methods=['GET'])
 def web_stream_analytics():
@@ -152,7 +154,7 @@ def web_stream_analytics():
                 mimetype='multipart/x-mixed-replace; boundary=frame')
         else:
             flash('No motion has been detected in the selected time range')
-    return Response()
+    return render_template('webcamMotionAnalytics.html')
 
 
 @app.route('/videostreaming/webcam', methods=['GET','POST'])
@@ -226,7 +228,7 @@ def video_feed_web():
     #print(webcamFlag)
     if webcamFlag:
         return Response(
-            stream_with_context(get_video_stream(consumer1,webcamWriter,recordWebFlag)), 
+            stream_with_context(get_video_stream(consumer1,webcamWriter,recordWebFlag,0)), 
             mimetype='multipart/x-mixed-replace; boundary=frame')
 
     return Response()
@@ -248,7 +250,7 @@ def video_feed_mobile():
 
     return Response()
 
-def get_video_stream(consumer,outFile,flag):
+def get_video_stream(consumer,outFile,flag,count):
     """
     Here is where we recieve streamed images from the Kafka Server and convert 
     them to a Flask-readable format.
@@ -264,6 +266,8 @@ def get_video_stream(consumer,outFile,flag):
         buf = frame.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpg\r\n\r\n' + buf + b'\r\n\r\n')
+        count+=1
+        print('Frames sent to consumer: ',count)
         if flag==True:
             #image = np.fromstring(decodedFrame, dtype=np.uint8)
             #image = cv2.imdecode(image, cv2.IMREAD_COLOR)
