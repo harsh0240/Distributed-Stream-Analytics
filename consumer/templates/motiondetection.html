@@ -1,12 +1,99 @@
-<html>
+<!doctype html>
+<html lang="en">
   <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="{{url_for('static',filename='css/style.css')}}">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
     <title>Motion Detection</title>
   </head>
-  <body>
-    <h1>Motion Detection Demonstration of past streams</h1>
-    <ul>
-    	<li>Click <a href="/videomotionanalytics/webcam">here</a> to watch motion in Webcam Streams</li>
-    	<li>Click <a href="/videomotionanalytics/mobile">here</a> to watch motion in Mobile Streams</li> 
-    </ul>
+  <body class="bg-info">
+    <nav class="navbar navbar-expand-lg navbar-light bg-dark text-light">
+      <div class="container">
+          <h1 class="text-bold">Motion Detection Demonstration of past streams</h1>
+      </div>
+        <!--<a class="btn btn-outline-dark" href='/logout'>Logout</a> -->
+        <a href="/logout" class="btn btn-info btn-lg">Log out <i class="bi bi-box-arrow-right text-bold" style="font-size: 1.3rem;"></i></a>
+    </nav>
+
+    <div class="container">
+        <div class="card text-white bg-dark mb-3 text-center" style="max-width: 55%;margin: 15%;">
+          <div class="card-header"><h3>Motion Detection</h3></div>
+          <div class="card-body">
+            <form class="form" method="post" action="/route_to_analytics">
+              {% with messages = get_flashed_messages() %}  
+                {% if messages %}  
+                  {% for message in messages %}  
+                    <p>{{ message }}</p>  
+                  {% endfor %}  
+                {% endif %}  
+              {% endwith %}
+              <p>See the motion detected from listed cameras.</p> <br>
+              <p>Camera id: <input type="text" name="id" placeholder="enter camera id"></p>
+              <p>Start Time: <input type="text" id="picker1" name="start" placeholder="&#xf1f0" value=""/></p>
+              <p>End Time: <input type="text" id="picker2" name="end" placeholder="&#xf1f7" value=""/></p>
+              <button type="submit" class="btn btn-primary" style="font-size: 1.3rem;">GO <i class="bi bi-box-arrow-right text-bold"></i></button><br>
+            </form>
+            
+          </div>
+      </div>
+    </div>
+
+    <!-- Optional JavaScript; choose one of the two! -->
+
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+  
+    <script type="text/javascript">
+    $(function() {
+      $('#picker1').daterangepicker({
+        timePicker: true,
+        singleDatePicker: true,
+        showDropdowns: true,
+        autoUpdateInput: false,
+        locale: {
+          cancelLabel: 'Clear'
+        }
+      });
+      $('#picker1').on('apply.daterangepicker', function(ev, picker) {
+      $(this).val(picker.startDate.format('MM/DD/YYYY hh:mm A'));
+      });
+
+      $('#picker1').on('cancel.daterangepicker', function(ev, picker) {
+        $(this).val('');
+      });
+    });
+    $(function() {
+      $('#picker2').daterangepicker({
+        timePicker: true,
+        singleDatePicker: true,
+        showDropdowns: true,
+        autoUpdateInput: false,
+        locale: {
+          cancelLabel: 'Clear'
+        }
+      });
+      $('#picker2').on('apply.daterangepicker', function(ev, picker) {
+      $(this).val(picker.startDate.format('MM/DD/YYYY hh:mm A'));
+      });
+
+      $('#picker2').on('cancel.daterangepicker', function(ev, picker) {
+      $(this).val('');
+      });
+    });
+    </script>
+    <!-- Option 2: Separate Popper and Bootstrap JS -->
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.6.0/dist/umd/popper.min.js" integrity="sha384-KsvD1yqQ1/1+IA7gi3P0tyJcT3vR+NdBTt13hSJ2lnve8agRGXTTyNaBYmCR/Nwi" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.min.js" integrity="sha384-nsg8ua9HAw1y0W1btsyWgBklPnCUAFLuTMS2G72MMONqmOymq585AcH49TLBQObG" crossorigin="anonymous"></script>
+    -->
   </body>
 </html>
