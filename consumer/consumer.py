@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template, request,stream_with_context, flash, redirect, url_for
+from flask import Flask, Response, render_template, request,stream_with_context, flash, redirect, url_for, session
 from kafka import KafkaConsumer,KafkaProducer
 import cv2
 import numpy as np
@@ -11,6 +11,19 @@ from flask_bootstrap import Bootstrap
 from flask_wtf import Form
 from wtforms.fields import DateTimeField
 import imgToVideo
+import os
+import mysql.connector
+from mysql.connector import errorcode
+
+
+#List of camera
+listOfCam = {
+  "cam-01": ["webcamStream","/videomotionanalytics/webcam"],
+  "cam-02": ["mobileCamStream","/videomotionanalytics/mobile"]
+}
+
+
+
 
 # Fire up the Kafka Consumer
 topic1 = "distributed-video1"
@@ -48,6 +61,7 @@ mobileImgArray=[]
 # Set the consumer in a Flask App
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
+app.secret_key=os.urandom(24)
 Bootstrap(app)
 '''
 class MyForm(Form):
@@ -60,9 +74,54 @@ class MyForm(Form):
         id='enddatepick'
     )
 '''
-@app.route('/', methods=['GET'])
+@app.route('/')
+def login():
+    return render_template('login.html')
+
+@app.route('/login_validation', methods=['POST'])
+def login_validation():
+    uemail=request.form.get('email')
+    upassword=request.form.get('password')
+
+#create connection to DB
+    try:
+        cnx = mysql.connector.connect(host="localhost",user="root",password="password",database="sem_project")
+        cursor=cnx.cursor()
+        cursor.execute("SELECT * FROM user WHERE email = %s  AND password = %s",(uemail,upassword))
+        users=cursor.fetchall()
+        print(users)
+        if len(users)>0:
+            session['user_id']=users[0][0]
+            return redirect('/index')
+        else:
+            return redirect('/')
+
+    except mysql.connector.Error as err:
+        return (str(err))
+
+@app.route('/route_to_streaming', methods=['POST','GET'])
+def route_to_streaming():
+    error = None
+    cam_id=request.form.get('id')
+    cam_id=cam_id.lower()
+    if cam_id in listOfCam.keys():
+        return redirect(url_for(listOfCam[cam_id][0]))
+    else:
+        error = "Enter valid camera id."
+    return render_template('videostreaming.html',error=error)
+ 
+@app.route('/route_to_analytics', methods=['POST'])
+def route_to_analytics():
+    cam_id=request.form.get('id')
+    cam_id=cam_id.lower()
+    return redirect(listOfCam[cam_id][1])
+
+@app.route('/index', methods=['GET'])
 def index():
-    return render_template('index.html')
+    if 'user_id' in session:
+        return render_template('index.html')
+    else:
+        return redirect('/')
 
 @app.route('/videostreaming', methods=['GET'])
 def videoStreaming():
@@ -272,7 +331,12 @@ def get_video_stream(consumer,outFile,flag):
             #print(image)
             outFile.write(image)
         #sleep(0.07)
-       
+  
+@app.route('/logout')
+def logout():
+    session.pop('user_id')
+    return redirect('/')
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
 
