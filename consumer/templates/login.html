@@ -8,22 +8,36 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
 
-    <title>cam-01 streaming</title>
+    <title>Login</title>
   </head>
   <body class="bg-info">
     <nav class="navbar navbar-expand-lg navbar-light bg-dark text-light">
       <div class="container">
-          <h1 class="text-bold">Live Stream for cam-01</h1>
+          <h1 class="text-bold">Video Streaming and Aalytics platform</h1>
       </div>
     </nav>
 
     <div class="container">
-      <form method="post">
-        <p><input type="submit" name="submit" value="Start"> <input type="submit" name="submit" value="Stop"></p>
-        <p><input type="submit" name="submit" value="Start Recording"> <input type="submit" name="submit" value="Stop Recording"></p>  
-        <p><input type="submit" name="submit" value="Auto"> <input type="submit" name="submit" value="720p"> <input type="submit" name="submit" value="480p"> <input type="submit" name="submit" value="360p"> <input type="submit" name="submit" value="240p"></p>     
-    </form>
-    <img src="{{ url_for('video_feed_web') }}">
+        <div class="row">
+            <div class="col-md-8 text-center">
+                <h1 class="text-light display-4" style="font-size: 40px; font-style: italic; margin-top: 20%;margin-right: 10%">Welcome to the large scale video streaming and analytics platform. 
+                This platform will be able to live stream feeds from multiple cameras on a single unified platform and detect and notify the user about human motions in any of the cameras.</h1>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-dark mb-3 text-center" style="max-width: 100%;margin-top: 25%;margin-left: 10%">
+                    <div class="card-body">
+                        <form class="form" method="post" action="/login_validation">
+                            <label>Email</label><br>
+                            <input type="email" name="email" class="form-control" placeholder="abc@gmail.com"><br>
+                            <label>Password</label><br>
+                            <input type="password" name="password" class="form-control"><br><br>
+                            <input type="submit" name="submit" class="btn btn-primary btn-block btn-lg" value="Login">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
     <!-- Optional JavaScript; choose one of the two! -->
 
@@ -37,4 +51,3 @@
     -->
   </body>
 </html>
-
