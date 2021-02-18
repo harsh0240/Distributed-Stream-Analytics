@@ -169,7 +169,7 @@ def webcamStream():
             recordWebFlag=True
             time=str(datetime.now().time())
             filename='./recording-WEBCAM--'+time+'.avi'
-            webcamWriter = cv2.VideoWriter(filename,fourcc, 20.0, (640,480),1)
+            webcamWriter = cv2.VideoWriter(filename,fourcc, 5.0, (640,480),1)
         elif request.form['submit']=='Stop Recording' and recordWebFlag==True:
             recordWebFlag=False
             webcamWriter.release()
@@ -179,7 +179,7 @@ def webcamStream():
                     webcamWriter.release()
                     time=str(datetime.now().time())
                     filename='./recording-WEBCAM--'+time+'@'+request.form['submit']+'.avi'
-                    webcamWriter=cv2.VideoWriter(filename,fourcc,10.0,(640,480),1)
+                    webcamWriter=cv2.VideoWriter(filename,fourcc,5.0,(640,480),1)
                 webresolution=request.form['submit']
                 producer.send(topic3,webresolution)
     
@@ -200,7 +200,7 @@ def mobileCamStream():
             recordMobFlag=True
             time=str(datetime.now().time())
             filename='./recording-MOBILE--'+time+'.avi'
-            mobileCamWriter = cv2.VideoWriter(filename,fourcc, 20.0, (640,480),1)
+            mobileCamWriter = cv2.VideoWriter(filename,fourcc,5.0, (640,480),1)
         elif request.form['submit']=='Stop Recording' and recordMobFlag==True:
             recordMobFlag=False
             mobileCamWriter.release()
@@ -210,7 +210,7 @@ def mobileCamStream():
                     mobileCamWriter.release()
                     time=str(datetime.now().time())
                     filename='./recording-MOBILE--'+time+'@'+request.form['submit']+'.avi'
-                    mobileCamWriter=cv2.VideoWriter(filename,fourcc,20.0,(640,480),1)
+                    mobileCamWriter=cv2.VideoWriter(filename,fourcc,5.0,(640,480),1)
                 mobileresolution=request.form['submit']
                 producer.send(topic4,mobileresolution)
 
@@ -228,7 +228,7 @@ def video_feed_web():
     #print(webcamFlag)
     if webcamFlag:
         return Response(
-            stream_with_context(get_video_stream(consumer1,webcamWriter,recordWebFlag,0)), 
+            stream_with_context(get_video_stream(consumer1,webcamWriter,recordWebFlag)), 
             mimetype='multipart/x-mixed-replace; boundary=frame')
 
     return Response()
@@ -250,7 +250,7 @@ def video_feed_mobile():
 
     return Response()
 
-def get_video_stream(consumer,outFile,flag,count):
+def get_video_stream(consumer,outFile,flag):
     """
     Here is where we recieve streamed images from the Kafka Server and convert 
     them to a Flask-readable format.
@@ -266,8 +266,6 @@ def get_video_stream(consumer,outFile,flag,count):
         buf = frame.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpg\r\n\r\n' + buf + b'\r\n\r\n')
-        count+=1
-        print('Frames sent to consumer: ',count)
         if flag==True:
             #image = np.fromstring(decodedFrame, dtype=np.uint8)
             #image = cv2.imdecode(image, cv2.IMREAD_COLOR)
