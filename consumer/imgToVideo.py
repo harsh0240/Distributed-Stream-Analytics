@@ -3,6 +3,9 @@ import numpy as np
 import glob
 import os
 from time import sleep
+from datetime import datetime
+
+font = cv2.FONT_HERSHEY_SIMPLEX
 
 def parse(filename):
     cameraFrame = filename.split('/')[5]
@@ -30,6 +33,10 @@ def findMotion(camID,startTime,endTime,img_array):
             break
         elif time >= startTime and time <= endTime:
             img = cv2.imread(filename)
+            #adds date-time in the frame
+            cv2.putText(img, str(datetime.fromtimestamp(time/1000)), (10,30), font, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+            #adds camera id in the frame
+            cv2.putText(img, camID, (10,470), font, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
             height, width, layers = img.shape
             size = (width,height)
             img_array.append(img)
