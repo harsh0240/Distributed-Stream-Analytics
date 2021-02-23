@@ -13,7 +13,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        final String processedImageDir = "/home/saloni/analysed-data/";
+        final String processedImageDir = "/home/harsh/analysed-data/";
 
         try {
             SparkSession session = SparkSession

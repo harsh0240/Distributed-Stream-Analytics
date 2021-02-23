@@ -75,7 +75,7 @@ def login_validation():
 
 #create connection to DB
     try:
-        cnx = mysql.connector.connect(host="localhost",user="root",password="Password123!",database="sem_project")
+        cnx = mysql.connector.connect(host="localhost",user="root",password="harsh24",database="sem_project")
         cursor=cnx.cursor()
         cursor.execute("SELECT * FROM user WHERE email = %s  AND password = %s",(uemail,upassword))
         users=cursor.fetchall()
