@@ -18,8 +18,8 @@ from mysql.connector import errorcode
 
 #List of camera
 listOfCam = {
-  "cam-01": ["webcam","/videomotionanalytics/webcam"],
-  "cam-02": ["mobile","/videomotionanalytics/mobile"]
+  "cam-01": ["webcamStream","/videomotionanalytics/webcam"],
+  "cam-02": ["mobileCamStream","/videomotionanalytics/mobile"]
 }
 
 
@@ -120,13 +120,13 @@ def route_to_analytics():
         endSeconds=(int(endTime[0])*60+int(endTime[1]))*60+int(endTime[2]);
         startTimestamp=(time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds)*1000
         endTimestamp=(time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds)*1000
-        if listOfCam[cam_id][0]=="webcam":
+        if listOfCam[cam_id][0]=="webcamStream":
             webcamImgArray=[]
             showWebAnalyticsVideo=True
             imgToVideo.findMotion(cam_id,startTimestamp,endTimestamp,webcamImgArray)
             return redirect(url_for('web_stream_analytics'))
         
-        elif listOfCam[cam_id]=="mobile":
+        elif listOfCam[cam_id]=="mobileCamStream":
             mobileImgArray=[]
             showMobileAnalyticsVideo=True
             imgToVideo.findMotion(cam_id,startTimestamp,endTimestamp,mobileImgArray)
