@@ -29,7 +29,7 @@ def convertToVideo(filename,img_array,appconfig):
 def findMotion(camID,startTime,endTime,img_array):
     size=(0,0)
     print(camID)
-    for filename in sorted(glob.glob('/home/harsh/analysed-data/'+camID+'/*.png')):
+    for filename in sorted(glob.glob('/home/saloni/analysed-data/'+camID+'/*.png')):
         time = parse(filename)
         #print(time)
         if time > endTime:
