@@ -122,6 +122,7 @@ def route_to_analytics():
         startTimestamp=(time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds)*1000
         endTimestamp=(time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds)*1000
         filename=cam_id+'--'+str(startTimestamp)+'-'+str(endTimestamp)+'.avi'
+        print(filename)
         if listOfCam[cam_id][0]=="webcamStream":
             webcamImgArray=[]
             showWebAnalyticsVideo=True
@@ -185,7 +186,7 @@ def download_files(filename):
     file_path = UPLOAD_FOLDER + filename
     if cameraId=='cam-01':
         imgToVideo.convertToVideo(file_path,webcamImgArray,app.config['UPLOAD_FOLDER'])
-    elif cameraId=='cam_02':
+    elif cameraId=='cam-02':
         imgToVideo.convertToVideo(file_path,mobileImgArray,app.config['UPLOAD_FOLDER'])
     
     return send_file(file_path, as_attachment=True, attachment_filename='')
