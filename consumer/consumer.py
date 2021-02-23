@@ -111,8 +111,8 @@ def route_to_analytics():
     if endTime<startTime: 
         flash('The End time should be greater than the Start time')
     else:
-        startDateTimeSplit=startTime.split('T');
-        endDateTimeSplit=endTime.split('T');
+        startDateTimeSplit=startTime.split(' ');
+        endDateTimeSplit=endTime.split(' ');
         startDate=startDateTimeSplit[0];
         endDate=endDateTimeSplit[0];
         startTime=startDateTimeSplit[1].split(':')
