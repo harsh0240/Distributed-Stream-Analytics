@@ -111,9 +111,6 @@ def set_resolution(image,resolution):
 	return blurImage
 
 
-prev_time=0
-next_time=0
-
 def publish_camera():
 	"""
 	Publish camera video stream to specified Kafka topic.
@@ -121,12 +118,12 @@ def publish_camera():
 	"""
 	global prev_time,next_time
 	# Start up producer
-	producer = KafkaProducer(bootstrap_servers='localhost:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'), batch_size=20971520, max_request_size=2097152, compression_type="gzip")
+	producer = KafkaProducer(bootstrap_servers='localhost:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'), batch_size=0, max_request_size=2097152, compression_type="gzip")
 
 	
-	#camera1 = cv2.VideoCapture(cameras[1])
+	camera1 = cv2.VideoCapture(cameras[1])
 	cameraId1="cam-01"
-	camera2 = cv2.VideoCapture(cameras[2])
+	#camera2 = cv2.VideoCapture(cameras[2])
 	cameraId2="mob-01"
 	
 	force_async(get_stream_resolution)(topic3)
@@ -134,7 +131,7 @@ def publish_camera():
 
 	try:
 		while(True):
-			'''
+			global q
 			success, frame = camera1.read()
 			
 			frame=cv2.flip(frame,1)
@@ -148,10 +145,13 @@ def publish_camera():
 			currTime=str(round(time.time() * 1000))
 			
 			jsonObj=convertToJSON(cameraId1,currTime,frame_width,frame_height,modifiedFrame)
+			#prev_time=time.time()
 			producer.send(topic1,jsonObj)
-			next_time=time.time()
-			print(cameraId1+' fps: ',1/(next_time-prev_time))
-			prev_time=next_time
+			#next_time=time.time()
+			#print(cameraId1+' producer time in seconds: ',next_time-prev_time)
+			#prev_time=next_time
+			#print(cameraId1+' fps: ',1/(next_time-prev_time))
+			#prev_time=next_time
 			'''
 			success, frame = camera2.read()
 			resizedFrame=cv2.resize(frame,(640,480))
@@ -166,7 +166,7 @@ def publish_camera():
 			next_time=time.time()
 			print(cameraId2+' fps: ',1/(next_time-prev_time))
 			prev_time=next_time
-			
+			'''
 	except Exception as e:
 		print('EXCEPTION OCCURED: ',e)
 		print("\nExiting.")
