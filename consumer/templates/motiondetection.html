@@ -64,7 +64,7 @@
         }
       });
       $('#picker1').on('apply.daterangepicker', function(ev, picker) {
-      $(this).val(picker.startDate.format('MM/DD/YYYY hh:mm A'));
+      $(this).val(picker.startDate.format('DD-MM-YYYYThh:mm:ss'));
       });
 
       $('#picker1').on('cancel.daterangepicker', function(ev, picker) {
@@ -82,7 +82,7 @@
         }
       });
       $('#picker2').on('apply.daterangepicker', function(ev, picker) {
-      $(this).val(picker.startDate.format('MM/DD/YYYY hh:mm A'));
+      $(this).val(picker.startDate.format('DD-MM-YYYYThh:mm:ss'));
       });
 
       $('#picker2').on('cancel.daterangepicker', function(ev, picker) {

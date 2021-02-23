@@ -18,8 +18,8 @@ from mysql.connector import errorcode
 
 #List of camera
 listOfCam = {
-  "cam-01": ["webcamStream","/videomotionanalytics/webcam"],
-  "cam-02": ["mobileCamStream","/videomotionanalytics/mobile"]
+  "cam-01": ["webcam","/videomotionanalytics/webcam"],
+  "cam-02": ["mobile","/videomotionanalytics/mobile"]
 }
 
 
@@ -63,17 +63,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
 app.secret_key=os.urandom(24)
 Bootstrap(app)
-'''
-class MyForm(Form):
-    start = DateTimeField(
-        "Start Time",
-        id='startdatepick'
-    )
-    end = DateTimeField(
-        "End Time",
-        id='enddatepick'
-    )
-'''
+
 @app.route('/')
 def login():
     return render_template('login.html')
@@ -85,7 +75,7 @@ def login_validation():
 
 #create connection to DB
     try:
-        cnx = mysql.connector.connect(host="localhost",user="root",password="password",database="sem_project")
+        cnx = mysql.connector.connect(host="localhost",user="root",password="Password123!",database="sem_project")
         cursor=cnx.cursor()
         cursor.execute("SELECT * FROM user WHERE email = %s  AND password = %s",(uemail,upassword))
         users=cursor.fetchall()
@@ -114,7 +104,34 @@ def route_to_streaming():
 def route_to_analytics():
     cam_id=request.form.get('id')
     cam_id=cam_id.lower()
-    return redirect(listOfCam[cam_id][1])
+    startTime=request.form.get('start')
+    endTime=request.form.get('end')
+    global showWebAnalyticsVideo,webcamImgArray,showMobileAnalyticsVideo,mobileImgArray
+    if endTime<startTime: 
+        flash('The End time should be greater than the Start time')
+    else:
+        startDateTimeSplit=startTime.split('T');
+        endDateTimeSplit=endTime.split('T');
+        startDate=startDateTimeSplit[0];
+        endDate=endDateTimeSplit[0];
+        startTime=startDateTimeSplit[1].split(':')
+        endTime=endDateTimeSplit[1].split(':')
+        startSeconds=(int(startTime[0])*60+int(startTime[1]))*60+int(startTime[2]);
+        endSeconds=(int(endTime[0])*60+int(endTime[1]))*60+int(endTime[2]);
+        startTimestamp=(time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds)*1000
+        endTimestamp=(time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds)*1000
+        if listOfCam[cam_id][0]=="webcam":
+            webcamImgArray=[]
+            showWebAnalyticsVideo=True
+            imgToVideo.findMotion(cam_id,startTimestamp,endTimestamp,webcamImgArray)
+            return redirect(url_for('web_stream_analytics'))
+        
+        elif listOfCam[cam_id]=="mobile":
+            mobileImgArray=[]
+            showMobileAnalyticsVideo=True
+            imgToVideo.findMotion(cam_id,startTimestamp,endTimestamp,mobileImgArray)
+            return redirect(url_for('mobile_stream_analytics'))           
+    return render_template('motiondetection.html')
 
 @app.route('/index', methods=['GET'])
 def index():
@@ -130,64 +147,6 @@ def videoStreaming():
 @app.route('/videomotionanalytics', methods=['GET'])
 def videoMotionAnalytics():
     return render_template('motiondetection.html')
-
-@app.route('/videomotionanalytics/webcam', methods=['GET','POST'])
-def webcamAnalytics():
-    global showWebAnalyticsVideo,webcamImgArray
-    if request.method == 'POST':
-        startTime=request.form['start']
-        endTime=request.form['end']
-        print(startTime,endTime)
-        if endTime<startTime: 
-            flash('The End time should be greater than the Start time')
-        else:
-            webcamImgArray=[]
-            showWebAnalyticsVideo=True
-            startDateTimeSplit=startTime.split('T');
-            endDateTimeSplit=endTime.split('T');
-            startDate=startDateTimeSplit[0];
-            endDate=endDateTimeSplit[0];
-            startTime=startDateTimeSplit[1].split(':')
-            endTime=endDateTimeSplit[1].split(':')
-            startSeconds=(int(startTime[0])*60+int(startTime[1]))*60+int(startTime[2]);
-            endSeconds=(int(endTime[0])*60+int(endTime[1]))*60+int(endTime[2]);
-            startTimestamp=(time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds)*1000
-            endTimestamp=(time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds)*1000
-            imgToVideo.findMotion('cam-01',startTimestamp,endTimestamp,webcamImgArray)
-            return redirect(url_for('web_stream_analytics'))
-    else:
-        showWebAnalyticsVideo=False
-    
-    return render_template('webcamMotionAnalytics.html')
-
-@app.route('/videomotionanalytics/mobile', methods=['GET','POST'])
-def mobileAnalytics():
-    global showMobileAnalyticsVideo,mobileImgArray
-    if request.method == 'POST':
-        startTime=request.form['start']
-        endTime=request.form['end']
-        print(startTime,endTime)
-        if endTime<startTime: 
-            flash('The End time should be greater than the Start time')
-        else:
-            mobileImgArray=[]
-            showMobileAnalyticsVideo=True
-            startDateTimeSplit=startTime.split('T');
-            endDateTimeSplit=endTime.split('T');
-            startDate=startDateTimeSplit[0];
-            endDate=endDateTimeSplit[0];
-            startTime=startDateTimeSplit[1].split(':')
-            endTime=endDateTimeSplit[1].split(':')
-            startSeconds=(int(startTime[0])*60+int(startTime[1]))*60+int(startTime[2]);
-            endSeconds=(int(endTime[0])*60+int(endTime[1]))*60+int(endTime[2]);
-            startTimestamp=(time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds)*1000
-            endTimestamp=(time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds)*1000
-            imgToVideo.findMotion('mob-01',startTimestamp,endTimestamp,mobileImgArray)
-            return redirect(url_for('mobile_stream_analytics'))
-    else:
-        showMobileAnalyticsVideo=False
-    
-    return render_template('mobileMotionAnalytics.html')
 
 @app.route('/streamingMotionDetection/mobile', methods=['GET'])
 def mobile_stream_analytics():
@@ -213,7 +172,7 @@ def web_stream_analytics():
                 mimetype='multipart/x-mixed-replace; boundary=frame')
         else:
             flash('No motion has been detected in the selected time range')
-    return render_template('webcamMotionAnalytics.html')
+    return redirect(url_for('videoMotionAnalytics'))
 
 
 @app.route('/videostreaming/webcam', methods=['GET','POST'])
@@ -228,7 +187,7 @@ def webcamStream():
             recordWebFlag=True
             time=str(datetime.now().time())
             filename='./recording-WEBCAM--'+time+'.avi'
-            webcamWriter = cv2.VideoWriter(filename,fourcc, 20.0, (640,480),1)
+            webcamWriter = cv2.VideoWriter(filename,fourcc, 5.0, (640,480),1)
         elif request.form['submit']=='Stop Recording' and recordWebFlag==True:
             recordWebFlag=False
             webcamWriter.release()
@@ -238,7 +197,7 @@ def webcamStream():
                     webcamWriter.release()
                     time=str(datetime.now().time())
                     filename='./recording-WEBCAM--'+time+'@'+request.form['submit']+'.avi'
-                    webcamWriter=cv2.VideoWriter(filename,fourcc,10.0,(640,480),1)
+                    webcamWriter=cv2.VideoWriter(filename,fourcc,5.0,(640,480),1)
                 webresolution=request.form['submit']
                 producer.send(topic3,webresolution)
     
@@ -259,7 +218,7 @@ def mobileCamStream():
             recordMobFlag=True
             time=str(datetime.now().time())
             filename='./recording-MOBILE--'+time+'.avi'
-            mobileCamWriter = cv2.VideoWriter(filename,fourcc, 20.0, (640,480),1)
+            mobileCamWriter = cv2.VideoWriter(filename,fourcc,5.0, (640,480),1)
         elif request.form['submit']=='Stop Recording' and recordMobFlag==True:
             recordMobFlag=False
             mobileCamWriter.release()
@@ -269,7 +228,7 @@ def mobileCamStream():
                     mobileCamWriter.release()
                     time=str(datetime.now().time())
                     filename='./recording-MOBILE--'+time+'@'+request.form['submit']+'.avi'
-                    mobileCamWriter=cv2.VideoWriter(filename,fourcc,20.0,(640,480),1)
+                    mobileCamWriter=cv2.VideoWriter(filename,fourcc,5.0,(640,480),1)
                 mobileresolution=request.form['submit']
                 producer.send(topic4,mobileresolution)
 
@@ -287,7 +246,7 @@ def video_feed_web():
     #print(webcamFlag)
     if webcamFlag:
         return Response(
-            stream_with_context(get_video_stream(consumer1,webcamWriter,recordWebFlag,0)), 
+            stream_with_context(get_video_stream(consumer1,webcamWriter,recordWebFlag)), 
             mimetype='multipart/x-mixed-replace; boundary=frame')
 
     return Response()
@@ -309,7 +268,7 @@ def video_feed_mobile():
 
     return Response()
 
-def get_video_stream(consumer,outFile,flag,count):
+def get_video_stream(consumer,outFile,flag):
     """
     Here is where we recieve streamed images from the Kafka Server and convert 
     them to a Flask-readable format.
@@ -325,8 +284,6 @@ def get_video_stream(consumer,outFile,flag,count):
         buf = frame.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpg\r\n\r\n' + buf + b'\r\n\r\n')
-        count+=1
-        print('Frames sent to consumer: ',count)
         if flag==True:
             #image = np.fromstring(decodedFrame, dtype=np.uint8)
             #image = cv2.imdecode(image, cv2.IMREAD_COLOR)

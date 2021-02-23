@@ -20,7 +20,7 @@ frame_width=8.9 #640/72
 frame_height=6.7 #480/72
 
 
-cameras={1:0, 2:'http://25.95.71.93:8080/video'} #dictionary of cameraId mapped to camera IPs
+cameras={1:0, 2:'http://192.168.43.148:8080/video'} #dictionary of cameraId mapped to camera IPs
 
 
 def force_async(fn):
@@ -110,20 +110,20 @@ def set_resolution(image,resolution):
 		blurImage=image
 	return blurImage
 
-count=0
+
 def publish_camera():
 	"""
 	Publish camera video stream to specified Kafka topic.
 	Kafka Server is expected to be running on the localhost. Not partitioned.
 	"""
-
+	global prev_time,next_time
 	# Start up producer
-	producer = KafkaProducer(bootstrap_servers='localhost:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'), batch_size=20971520, max_request_size=2097152, compression_type="gzip")
+	producer = KafkaProducer(bootstrap_servers='localhost:9092',value_serializer=lambda v: json.dumps(v).encode('utf-8'), batch_size=0, max_request_size=2097152, compression_type="gzip")
 
 	
 	camera1 = cv2.VideoCapture(cameras[1])
 	cameraId1="cam-01"
-	#camera2 = cv2.VideoCapture(cameras[2])
+	camera2 = cv2.VideoCapture(cameras[2])
 	cameraId2="mob-01"
 	
 	force_async(get_stream_resolution)(topic3)
@@ -131,8 +131,9 @@ def publish_camera():
 
 	try:
 		while(True):
-			global count
+			global q
 			success, frame = camera1.read()
+			
 			frame=cv2.flip(frame,1)
 			modifiedFrame=frame
 			if webresolution!='Auto':
@@ -142,17 +143,16 @@ def publish_camera():
 			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
 			
 			currTime=str(round(time.time() * 1000))
-			#path = dir_path + "/" + currTime + ".jpg"
-			# save image with lower quality—smaller file size
-			#cv2.imwrite(path, frame, [cv2.IMWRITE_JPEG_QUALITY, 50])
-			#cv2.imwrite(path, frame)
-			#print(cameraId1 + " -- " + currTime)
 			
 			jsonObj=convertToJSON(cameraId1,currTime,frame_width,frame_height,modifiedFrame)
+			#prev_time=time.time()
 			producer.send(topic1,jsonObj)
-			count+=1
-			print('Frames sent through producer: ',count)
-			'''
+			#next_time=time.time()
+			#print(cameraId1+' producer time in seconds: ',next_time-prev_time)
+			#prev_time=next_time
+			#print(cameraId1+' fps: ',1/(next_time-prev_time))
+			#prev_time=next_time
+			
 			success, frame = camera2.read()
 			resizedFrame=cv2.resize(frame,(640,480))
 			modifiedFrame=resizedFrame
@@ -163,7 +163,10 @@ def publish_camera():
 			jsonObj=convertToJSON(cameraId2,currTime,frame_width,frame_height,modifiedFrame)
 			
 			producer.send(topic2,jsonObj)          
-			'''
+			#next_time=time.time()
+			#print(cameraId2+' fps: ',1/(next_time-prev_time))
+			#prev_time=next_time
+			
 	except Exception as e:
 		print('EXCEPTION OCCURED: ',e)
 		print("\nExiting.")
@@ -171,7 +174,7 @@ def publish_camera():
 
 	
 	camera1.release()
-	#camera2.release()
+	camera2.release()
 
 if __name__ == '__main__':
 	
