@@ -171,7 +171,7 @@ def web_stream_analytics():
                 stream_with_context(imgToVideo.stream_video(webcamImgArray)), 
                 mimetype='multipart/x-mixed-replace; boundary=frame')
         else:
-            print('No motion has been detected in the selected time range')
+            flash('No motion has been detected in the selected time range')
     return redirect(url_for('videoMotionAnalytics'))
 
 

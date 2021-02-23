@@ -123,7 +123,7 @@ def publish_camera():
 	
 	camera1 = cv2.VideoCapture(cameras[1])
 	cameraId1="cam-01"
-	#camera2 = cv2.VideoCapture(cameras[2])
+	camera2 = cv2.VideoCapture(cameras[2])
 	cameraId2="mob-01"
 	
 	force_async(get_stream_resolution)(topic3)
@@ -152,7 +152,7 @@ def publish_camera():
 			#prev_time=next_time
 			#print(cameraId1+' fps: ',1/(next_time-prev_time))
 			#prev_time=next_time
-			'''
+			
 			success, frame = camera2.read()
 			resizedFrame=cv2.resize(frame,(640,480))
 			modifiedFrame=resizedFrame
@@ -163,10 +163,10 @@ def publish_camera():
 			jsonObj=convertToJSON(cameraId2,currTime,frame_width,frame_height,modifiedFrame)
 			
 			producer.send(topic2,jsonObj)          
-			next_time=time.time()
-			print(cameraId2+' fps: ',1/(next_time-prev_time))
-			prev_time=next_time
-			'''
+			#next_time=time.time()
+			#print(cameraId2+' fps: ',1/(next_time-prev_time))
+			#prev_time=next_time
+			
 	except Exception as e:
 		print('EXCEPTION OCCURED: ',e)
 		print("\nExiting.")
@@ -174,7 +174,7 @@ def publish_camera():
 
 	
 	camera1.release()
-	#camera2.release()
+	camera2.release()
 
 if __name__ == '__main__':
 	
