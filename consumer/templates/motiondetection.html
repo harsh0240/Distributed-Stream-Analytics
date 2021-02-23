@@ -26,12 +26,12 @@
           <div class="card-header"><h3>Motion Detection</h3></div>
           <div class="card-body">
             <form class="form" method="post" action="/route_to_analytics">
-              {% with messages = get_flashed_messages() %}  
-                {% if messages %}  
-                  {% for message in messages %}  
-                    <p>{{ message }}</p>  
-                  {% endfor %}  
-                {% endif %}  
+              {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                  {% for message in messages %}
+                    <p>{{ message }}</p>
+                  {% endfor %}
+                {% endif %}
               {% endwith %}
               <p>See the motion detected from listed cameras.</p> <br>
               <p>Camera id: <input type="text" name="id" placeholder="enter camera id"></p>
@@ -39,7 +39,7 @@
               <p>End Time: <input type="text" id="picker2" name="end" placeholder="&#xf1f7" value=""/></p>
               <button type="submit" class="btn btn-primary" style="font-size: 1.3rem;">GO <i class="bi bi-box-arrow-right text-bold"></i></button><br>
             </form>
-            
+
           </div>
       </div>
     </div>
@@ -51,7 +51,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-  
+
     <script type="text/javascript">
     $(function() {
       $('#picker1').daterangepicker({
@@ -59,6 +59,7 @@
         singleDatePicker: true,
         showDropdowns: true,
         autoUpdateInput: false,
+        timePicker24Hour: true,
         locale: {
           cancelLabel: 'Clear'
         }
@@ -77,6 +78,7 @@
         singleDatePicker: true,
         showDropdowns: true,
         autoUpdateInput: false,
+        timePicker24Hour: true,
         locale: {
           cancelLabel: 'Clear'
         }
