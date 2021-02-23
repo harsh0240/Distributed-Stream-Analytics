@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template, request,stream_with_context, flash, redirect, url_for, session
+from flask import Flask, Response, render_template, request,stream_with_context, flash, redirect, url_for, session,send_file
 from kafka import KafkaConsumer,KafkaProducer
 import cv2
 import numpy as np
@@ -22,7 +22,7 @@ listOfCam = {
   "cam-02": ["mobileCamStream","/videomotionanalytics/mobile"]
 }
 
-
+UPLOAD_FOLDER='videos/'
 
 
 # Fire up the Kafka Consumer
@@ -61,6 +61,7 @@ mobileImgArray=[]
 # Set the consumer in a Flask App
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key=os.urandom(24)
 Bootstrap(app)
 
@@ -110,8 +111,8 @@ def route_to_analytics():
     if endTime<startTime: 
         flash('The End time should be greater than the Start time')
     else:
-        startDateTimeSplit=startTime.split('T');
-        endDateTimeSplit=endTime.split('T');
+        startDateTimeSplit=startTime.split(' ');
+        endDateTimeSplit=endTime.split(' ');
         startDate=startDateTimeSplit[0];
         endDate=endDateTimeSplit[0];
         startTime=startDateTimeSplit[1].split(':')
@@ -120,17 +121,24 @@ def route_to_analytics():
         endSeconds=(int(endTime[0])*60+int(endTime[1]))*60+int(endTime[2]);
         startTimestamp=(time.mktime(datetime.strptime(startDate,"%d-%m-%Y").timetuple())+startSeconds)*1000
         endTimestamp=(time.mktime(datetime.strptime(endDate,"%d-%m-%Y").timetuple())+endSeconds)*1000
+        filename=cam_id+'--'+str(startTimestamp)+'-'+str(endTimestamp)+'.avi'
         if listOfCam[cam_id][0]=="webcamStream":
             webcamImgArray=[]
             showWebAnalyticsVideo=True
             imgToVideo.findMotion(cam_id,startTimestamp,endTimestamp,webcamImgArray)
-            return redirect(url_for('web_stream_analytics'))
+            if len(webcamImgArray)>0:
+                return render_template('webcamMotionAnalytics.html',value=filename)
+            else:
+                flash('No motion has been detected in the selected time range')   
         
-        elif listOfCam[cam_id]=="mobileCamStream":
+        elif listOfCam[cam_id][0]=="mobileCamStream":
             mobileImgArray=[]
             showMobileAnalyticsVideo=True
             imgToVideo.findMotion(cam_id,startTimestamp,endTimestamp,mobileImgArray)
-            return redirect(url_for('mobile_stream_analytics'))           
+            if len(mobileImgArray)>0:
+                return render_template('mobileMotionAnalytics.html',value=filename)   
+            else:
+                flash('No motion has been detected in the selected time range')     
     return render_template('motiondetection.html')
 
 @app.route('/index', methods=['GET'])
@@ -148,32 +156,39 @@ def videoStreaming():
 def videoMotionAnalytics():
     return render_template('motiondetection.html')
 
-@app.route('/streamingMotionDetection/mobile', methods=['GET'])
+
+
+@app.route('/videomotionanalytics/mobile', methods=['GET'])
 def mobile_stream_analytics():
     global showMobileAnalyticsVideo,mobileImgArray
     if showMobileAnalyticsVideo==True:
         showMobileAnalyticsVideo=False
-        if len(mobileImgArray)>0:
-            return Response(
-                stream_with_context(imgToVideo.stream_video(mobileImgArray)), 
-                mimetype='multipart/x-mixed-replace; boundary=frame')
-        else:
-            flash('No motion has been detected in the selected time range')
-    return render_template('mobileMotionAnalytics.html')
+        return Response(
+            stream_with_context(imgToVideo.stream_video(mobileImgArray)), 
+            mimetype='multipart/x-mixed-replace; boundary=frame')
+        
+    return redirect(url_for('videoMotionAnalytics'))
 
-@app.route('/streamingMotionDetection/web', methods=['GET'])
+@app.route('/videomotionanalytics/web', methods=['GET'])
 def web_stream_analytics():
     global showWebAnalyticsVideo,webcamImgArray
     if showWebAnalyticsVideo==True:
         showWebAnalyticsVideo=False
-        if len(webcamImgArray)>0:
-            return Response(
-                stream_with_context(imgToVideo.stream_video(webcamImgArray)), 
-                mimetype='multipart/x-mixed-replace; boundary=frame')
-        else:
-            flash('No motion has been detected in the selected time range')
+        return Response(
+            stream_with_context(imgToVideo.stream_video(webcamImgArray)), 
+            mimetype='multipart/x-mixed-replace; boundary=frame')
     return redirect(url_for('videoMotionAnalytics'))
 
+@app.route('/download-file/<filename>')
+def download_files(filename):
+    cameraId=filename.split('--')[0]
+    file_path = UPLOAD_FOLDER + filename
+    if cameraId=='cam-01':
+        imgToVideo.convertToVideo(file_path,webcamImgArray,app.config['UPLOAD_FOLDER'])
+    elif cameraId=='cam_02':
+        imgToVideo.convertToVideo(file_path,mobileImgArray,app.config['UPLOAD_FOLDER'])
+    
+    return send_file(file_path, as_attachment=True, attachment_filename='')
 
 @app.route('/videostreaming/webcam', methods=['GET','POST'])
 def webcamStream():
