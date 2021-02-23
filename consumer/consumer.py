@@ -128,11 +128,11 @@ def route_to_analytics():
             imgToVideo.findMotion(cam_id,startTimestamp,endTimestamp,webcamImgArray)
             return render_template('webcamMotionAnalytics.html',value=filename)
         
-        elif listOfCam[cam_id]=="mobileCamStream":
+        elif listOfCam[cam_id][0]=="mobileCamStream":
             mobileImgArray=[]
             showMobileAnalyticsVideo=True
             imgToVideo.findMotion(cam_id,startTimestamp,endTimestamp,mobileImgArray)
-            return redirect(url_for('mobile_stream_analytics'))           
+            return render_template('mobileMotionAnalytics.html',value=filename)        
     return render_template('motiondetection.html')
 
 @app.route('/index', methods=['GET'])
@@ -155,6 +155,7 @@ def videoMotionAnalytics():
 @app.route('/videomotionanalytics/mobile', methods=['GET'])
 def mobile_stream_analytics():
     global showMobileAnalyticsVideo,mobileImgArray
+    print(showMobileAnalyticsVideo)
     if showMobileAnalyticsVideo==True:
         showMobileAnalyticsVideo=False
         if len(mobileImgArray)>0:
