@@ -105,8 +105,10 @@ def route_to_streaming():
 def route_to_analytics():
     cam_id=request.form.get('id')
     cam_id=cam_id.lower()
-    startTime=request.form.get('start')
-    endTime=request.form.get('end')
+    startTime=request.form.get('start').strip()
+    endTime=request.form.get('end').strip()
+    startTime=" ".join(startTime.split())
+    endTime=" ".join(endTime.split())
     global showWebAnalyticsVideo,webcamImgArray,showMobileAnalyticsVideo,mobileImgArray
     if endTime<startTime: 
         flash('The End time should be greater than the Start time')
