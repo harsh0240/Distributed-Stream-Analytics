@@ -16,6 +16,8 @@ topic4 = "mobileresolution"
 
 webresolution='Auto'
 mobileresolution='Auto'
+webthreshold=0
+mobilethreshold=0
 frame_width=8.9 #640/72
 frame_height=6.7 #480/72
 
@@ -72,31 +74,38 @@ def publish_video(video_file):
 	print('publish complete')
  '''
 
-def convertToJSON(cameraId,currTime,frame_width,frame_height,buffer):
+def convertToJSON(cameraId,currTime,frame_width,frame_height,buffer,threshold):
 	obj={
 		"cameraId": cameraId,
 		"timestamp": str(currTime),
 		"rows": 480,
 		"cols": 640,
 		"type": 16,
+		"threshold": threshold,
 		"data": base64.b64encode(buffer.tobytes()).decode('utf-8')
 	}
 	return obj
 
-def get_stream_resolution(topic):
+def get_stream_message(topic):
 	consumer = KafkaConsumer(
 	topic,
 	bootstrap_servers=['localhost:9092'],
 	auto_offset_reset='latest',
 	enable_auto_commit=False,
 	value_deserializer=lambda x: json.loads(x.decode('utf-8')))
-	global webresolution,mobileresolution
-
+	global webresolution,mobileresolution,webthreshold,mobilethreshold
 	for message in consumer:
+		print(message.value)
 		if topic==topic3:
-			webresolution=message.value
+			if 'threshold' in message.value:
+				webthreshold=message.value['threshold']
+			elif 'resolution' in message.value:
+				webresolution=message.value['resolution']
 		else:
-			mobileresolution=message.value
+			if 'threshold' in message.value:
+				mobilethreshold=message.value['threshold']
+			elif 'resolution' in message.value:
+				mobileresolution=message.value['resolution']
 
 def set_resolution(image,resolution):
 	blurImage=None
@@ -126,8 +135,8 @@ def publish_camera():
 	#camera2 = cv2.VideoCapture(cameras[2])
 	cameraId2="mob-01"
 	
-	force_async(get_stream_resolution)(topic3)
-	force_async(get_stream_resolution)(topic4)
+	force_async(get_stream_message)(topic3)
+	force_async(get_stream_message)(topic4)
 
 	try:
 		while(True):
@@ -141,10 +150,8 @@ def publish_camera():
 			#grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 			
 			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
-			
 			currTime=str(round(time.time() * 1000))
-			
-			jsonObj=convertToJSON(cameraId1,currTime,frame_width,frame_height,modifiedFrame)
+			jsonObj=convertToJSON(cameraId1,currTime,frame_width,frame_height,modifiedFrame,webthreshold)
 			#prev_time=time.time()
 			producer.send(topic1,jsonObj)
 			#next_time=time.time()
@@ -160,7 +167,7 @@ def publish_camera():
 				modifiedFrame=set_resolution(resizedFrame,mobileresolution)
 			ret, buffer = cv2.imencode('.jpg', modifiedFrame)
 			currTime=str(round(time.time() * 1000))
-			jsonObj=convertToJSON(cameraId2,currTime,frame_width,frame_height,modifiedFrame)
+			jsonObj=convertToJSON(cameraId2,currTime,frame_width,frame_height,modifiedFrame,mobilethreshold)
 			
 			producer.send(topic2,jsonObj)          
 			#next_time=time.time()
