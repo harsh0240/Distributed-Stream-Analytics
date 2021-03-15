@@ -109,20 +109,18 @@ def sendThreshold(cam_id,currThreshold):
         producer.send(topic3,thresholdObj)
     elif cam_id=="cam-02":
         producer.send(topic4,thresholdObj)
-
  
 @app.route('/route_to_analytics', methods=['POST'])
 def route_to_analytics():
     global showWebAnalyticsVideo,webcamImgArray,showMobileAnalyticsVideo,mobileImgArray
     cam_id=request.form.get('id')
     cam_id=cam_id.lower()
-    currentThreshold=request.form.get('threshold')
+    
     startTime=request.form.get('start').strip()
     endTime=request.form.get('end').strip()
     startTime=" ".join(startTime.split())
     endTime=" ".join(endTime.split())
-    if currentThreshold!=threshold:
-        sendThreshold(cam_id,currentThreshold)
+    
     if endTime<startTime: 
         flash('The End time should be greater than the Start time')
     else:
@@ -231,6 +229,10 @@ def webcamStream():
                     webcamWriter=cv2.VideoWriter(filename,fourcc,5.0,(640,480),1)
                 webresolution={"resolution":request.form['submit']}
                 producer.send(topic3,webresolution)
+        elif request.form['submit']=='Submit':
+            currentThreshold=request.form.get('threshold')
+            if currentThreshold!='' and currentThreshold!=threshold:
+                sendThreshold('cam-01',currentThreshold)
     
     return render_template('webcamStream.html')
 
@@ -262,8 +264,11 @@ def mobileCamStream():
                     mobileCamWriter=cv2.VideoWriter(filename,fourcc,5.0,(640,480),1)
                 mobileresolution={"resolution":request.form['submit']}
                 producer.send(topic4,mobileresolution)
+        elif request.form['submit']=='Submit':
+            currentThreshold=request.form.get('threshold')
+            if currentThreshold!='' and currentThreshold!=threshold:
+                sendThreshold('cam-02',currentThreshold)
 
-            
     return render_template('mobileStream.html')
 
 @app.route('/webcam_feed', methods=['GET'])

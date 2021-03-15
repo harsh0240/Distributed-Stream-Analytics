@@ -16,8 +16,8 @@ topic4 = "mobileresolution"
 
 webresolution='Auto'
 mobileresolution='Auto'
-webthreshold=0
-mobilethreshold=0
+webthreshold=5
+mobilethreshold=5
 frame_width=8.9 #640/72
 frame_height=6.7 #480/72
 
