@@ -12,6 +12,7 @@ public class VideoEventData implements Serializable {
     private int rows;
     private int cols;
     private int type;
+    private int threshold;
     private String data;
 
     VideoEventData() {}
@@ -23,6 +24,7 @@ public class VideoEventData implements Serializable {
         this.rows = obj.getInt("rows");
         this.cols = obj.getInt("cols");
         this.type = obj.getInt("type");
+        this.threshold = obj.getInt("threshold");
         this.data = obj.getString("data");
     }
 
@@ -55,6 +57,9 @@ public class VideoEventData implements Serializable {
     }
     public void setType(int type) {
         this.type = type;
+    }
+    public int getThreshold() {
+        return threshold;
     }
     public String getData() {
         return data;

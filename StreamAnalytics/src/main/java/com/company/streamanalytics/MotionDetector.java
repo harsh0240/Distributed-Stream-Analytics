@@ -64,7 +64,8 @@ public class MotionDetector {
             //first
             if (firstFrame != null) {
                 Core.absdiff(firstFrame, grayFrame, deltaFrame);
-                Imgproc.threshold(deltaFrame, thresholdFrame, 20, 255, Imgproc.THRESH_BINARY);
+                System.out.println(eventData.getThreshold());
+                Imgproc.threshold(deltaFrame, thresholdFrame, eventData.getThreshold(), 255, Imgproc.THRESH_BINARY);
                 rectArray = getContourArea(thresholdFrame);
                 if (rectArray.size() > 0) {
                     Iterator<Rect> it2 = rectArray.iterator();

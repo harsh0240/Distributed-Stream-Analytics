@@ -47,7 +47,7 @@ consumer2 = KafkaConsumer(
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 webcamWriter=None
 mobileCamWriter=None
-
+threshold=0
 webcamFlag=True
 mobileCamFlag=True
 recordWebFlag=False
@@ -100,14 +100,27 @@ def route_to_streaming():
     else:
         error = "Enter valid camera id."
     return render_template('videostreaming.html',error=error)
+
+def sendThreshold(cam_id,currThreshold):
+    global threshold
+    threshold=currThreshold
+    thresholdObj={"threshold":threshold}
+    if cam_id=="cam-01":
+        producer.send(topic3,thresholdObj)
+    elif cam_id=="cam-02":
+        producer.send(topic4,thresholdObj)
  
 @app.route('/route_to_analytics', methods=['POST'])
 def route_to_analytics():
+    global showWebAnalyticsVideo,webcamImgArray,showMobileAnalyticsVideo,mobileImgArray
     cam_id=request.form.get('id')
     cam_id=cam_id.lower()
-    startTime=request.form.get('start')
-    endTime=request.form.get('end')
-    global showWebAnalyticsVideo,webcamImgArray,showMobileAnalyticsVideo,mobileImgArray
+    
+    startTime=request.form.get('start').strip()
+    endTime=request.form.get('end').strip()
+    startTime=" ".join(startTime.split())
+    endTime=" ".join(endTime.split())
+    
     if endTime<startTime: 
         flash('The End time should be greater than the Start time')
     else:
@@ -214,8 +227,12 @@ def webcamStream():
                     time=str(datetime.now().time())
                     filename='./recording-WEBCAM--'+time+'@'+request.form['submit']+'.avi'
                     webcamWriter=cv2.VideoWriter(filename,fourcc,5.0,(640,480),1)
-                webresolution=request.form['submit']
+                webresolution={"resolution":request.form['submit']}
                 producer.send(topic3,webresolution)
+        elif request.form['submit']=='Submit':
+            currentThreshold=request.form.get('threshold')
+            if currentThreshold!='' and currentThreshold!=threshold:
+                sendThreshold('cam-01',currentThreshold)
     
     return render_template('webcamStream.html')
 
@@ -245,10 +262,13 @@ def mobileCamStream():
                     time=str(datetime.now().time())
                     filename='./recording-MOBILE--'+time+'@'+request.form['submit']+'.avi'
                     mobileCamWriter=cv2.VideoWriter(filename,fourcc,5.0,(640,480),1)
-                mobileresolution=request.form['submit']
+                mobileresolution={"resolution":request.form['submit']}
                 producer.send(topic4,mobileresolution)
+        elif request.form['submit']=='Submit':
+            currentThreshold=request.form.get('threshold')
+            if currentThreshold!='' and currentThreshold!=threshold:
+                sendThreshold('cam-02',currentThreshold)
 
-            
     return render_template('mobileStream.html')
 
 @app.route('/webcam_feed', methods=['GET'])
@@ -292,11 +312,8 @@ def get_video_stream(consumer,outFile,flag):
     for msg in consumer:
         decodedFrame=base64.b64decode(msg.value['data'])
         image = np.fromstring(decodedFrame, dtype=np.uint8)
-        #print(decodedFrame)
         image = np.reshape(image, (480, 640, 3))
-        #print(image)
         ret, frame = cv2.imencode('.jpg', image)
-        #print(frame.tobytes() == decodedFrame)
         buf = frame.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpg\r\n\r\n' + buf + b'\r\n\r\n')

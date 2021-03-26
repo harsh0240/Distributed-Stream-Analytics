@@ -21,7 +21,8 @@
       <form method="post">
         <p><input type="submit" name="submit" value="Start"> <input type="submit" name="submit" value="Stop"></p>
         <p><input type="submit" name="submit" value="Start Recording"> <input type="submit" name="submit" value="Stop Recording"></p>  
-        <p><input type="submit" name="submit" value="Auto"> <input type="submit" name="submit" value="720p"> <input type="submit" name="submit" value="480p"> <input type="submit" name="submit" value="360p"> <input type="submit" name="submit" value="240p"></p>     
+        <p><input type="submit" name="submit" value="Auto"> <input type="submit" name="submit" value="720p"> <input type="submit" name="submit" value="480p"> <input type="submit" name="submit" value="360p"> <input type="submit" name="submit" value="240p"></p>
+        <p>Threshold (between 0 and 255) : <input type="number" min="0" max="255" name="threshold"> <input type="submit" name="submit" value="Submit"></p>     
     </form>
     <img src="{{ url_for('video_feed_web') }}">
     </div>
