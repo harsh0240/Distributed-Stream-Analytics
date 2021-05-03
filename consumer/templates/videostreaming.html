@@ -17,6 +17,7 @@
           <h1 class="text-bold">Real Time Video Streaming Demonstration</h1>
       </div>
         <!--<a class="btn btn-outline-dark" href='/logout'>Logout</a> -->
+        <a href="/videomotionanalytics" class="btn btn-info btn-lg" style="margin-right: 10px">Motion Detection</a>
         <a href="/logout" class="btn btn-info btn-lg">Log out <i class="bi bi-box-arrow-right text-bold" style="font-size: 1.3rem;"></i></a>
     </nav>
 
@@ -29,7 +30,7 @@
                 <p style="color: yellow">{{error}}</p>
               {% endif %}  
               <label>See the live video streaming from listed cameras.</label> <br><br>
-              <input type="text" name="id" placeholder="enter camera id"><br><br>
+              <p>Camera id: <input type="text" name="id" placeholder="enter camera id"></p><br>
                 <button type="submit" class="btn btn-primary" style="font-size: 1.3rem;">GO <i class="bi bi-box-arrow-right text-bold"></i></button><br>
             </form>
             
